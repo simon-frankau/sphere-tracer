@@ -40,8 +40,8 @@
                            c.b += i.b * k.b * p; }
 
 /* ------------------------------------------------------------
-* Graphics structures.
-*/
+ * Graphics structures.
+ */
 
 typedef struct {
  double x, y, z;
@@ -65,8 +65,8 @@ typedef struct {
 } light;
 
 /* ------------------------------------------------------------
-* Global variables
-*/
+ * Global variables
+ */
 
 sphere *spheres;
 int no_spheres;
@@ -90,8 +90,8 @@ colour white = {1.0, 1.0, 1.0};
 colour black = {0.0, 0.0, 0.0};
 
 /* ------------------------------------------------------------
-* Function prototypes.
-*/
+ * Function prototypes.
+ */
 
 /* Make a spherical shell filled with spheres. */
 void make_spheres(double min, double max, int count);
@@ -106,15 +106,17 @@ sphere *trace(vector from, vector direction, double *dist, int ignore);
 void texture(sphere *s, vector from, vector dir, double dist, colour *colour);
 
 /* Convert a colour array into an image suitable for saving. */
-void convert_image(int width, int height, colour *im_in, png_bytep im_out);
+void convert_image(int width, int height, colour const *im_in,
+                   png_bytep im_out);
 
 /* Write an image from an array of R, G and B png_bytes. */
-void write_image(int width, int height, png_bytep image, char *filename);
+void write_image(int width, int height, png_bytep image,
+                 char const *filename);
 
 
 /* ------------------------------------------------------------
-* Functions.
-*/
+ * Functions.
+ */
 
 int main(void) {
  colour *image;
@@ -185,19 +187,19 @@ void make_spheres(double min, double max, int count)
    spheres[i].diffuse.g = 1.0*rand()/RAND_MAX;
    spheres[i].diffuse.b = 1.0*rand()/RAND_MAX;
 
-   spheres[i].specular.r 
+   spheres[i].specular.r
      = spheres[i].specular.g
      = spheres[i].specular.b
      = 0.5;
 
-   spheres[i].reflective.r 
+   spheres[i].reflective.r
      = spheres[i].reflective.g
      = spheres[i].reflective.b
      = 0.5;
 
    printf("%d\n", i+1);
  }
-} 
+}
 
 /* Trace a unit ray, to find an intersection */
 sphere *trace(vector from, vector direction, double *dist, int ignore)
@@ -357,12 +359,13 @@ void render(colour *image)
      } else {
         texture(intersect, origin, ray, dist,image + y*WIDTH + x);
      }
-   }  
+   }
  }
 }
 
 /* Convert a colour array into an image suitable for saving. */
-void convert_image(int width, int height, colour *im_in, png_bytep im_out)
+void convert_image(int width, int height, colour const *im_in,
+                   png_bytep im_out)
 {
  int x, y;
  int r, g, b;
@@ -391,11 +394,12 @@ void convert_image(int width, int height, colour *im_in, png_bytep im_out)
      /* Blue: */
      b = im_in[y*width + x].b / max;
      im_out[y*width*3 + x*3 + 2] = (b > 255) ? 255 : b;
-   } 
+   }
 }
 
 /* Write an image from an array of R, G and B png_bytes. */
-void write_image(int width, int height, png_bytep image, char *filename)
+void write_image(int width, int height, png_bytep image,
+                 char const *filename)
 {
  FILE *fp;
  png_structp png_ptr;
@@ -417,7 +421,7 @@ void write_image(int width, int height, png_bytep image, char *filename)
                             (png_infopp)NULL);
    return;
  }
- if (setjmp(png_ptr->jmpbuf)) {
+ if (setjmp(png_jmpbuf(png_ptr))) {
    png_destroy_write_struct(&png_ptr, &info_ptr);
    fclose(fp);
    return;
@@ -431,7 +435,7 @@ void write_image(int width, int height, png_bytep image, char *filename)
  if (!row_pointers) {
    png_destroy_write_struct(&png_ptr, &info_ptr);
    fclose(fp);
-   return;    
+   return;
  }
  for (i = 0; i < height; i++)
    row_pointers[i] = image + (i * width * 3);
