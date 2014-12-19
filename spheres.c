@@ -12,8 +12,8 @@
 #include "tracer.h"
 #include "png_render.h"
 
-#define WIDTH 1280
-#define HEIGHT 1024
+#define WIDTH 512
+#define HEIGHT 512
 
 /*
 light lights[] = {

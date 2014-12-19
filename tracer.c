@@ -18,6 +18,10 @@
 
 #define REFLECTSTOP 0.1
 
+#ifndef INFINITY
+#define INFINITY (1.0 / 0.0)
+#endif
+
 #define SHADE(c, i, k, p) { c.r += i.r * k.r * p; \
                            c.g += i.g * k.g * p; \
                            c.b += i.b * k.b * p; }
@@ -35,7 +39,7 @@ colour black = {0.0, 0.0, 0.0};
  */
 
 /* Trace a unit ray, to find an intersection */
-static sphere *trace(scene const *sc, vector from, vector direction, double *dist, int ignore);
+static sphere *intersect(scene const *sc, vector from, vector direction, double *dist, sphere const *ignore);
 
 /* Texture a point */
 static void texture(scene const *sc, sphere *s, vector from, vector dir, double dist, colour *colour);
@@ -44,32 +48,55 @@ static void texture(scene const *sc, sphere *s, vector from, vector dir, double 
  * Functions.
  */
 
+/* Find the colour for a given ray. Rather than post-multiply for
+ * absorbtion further down the line, we pre-multiply, allowing us
+ * to cut off at an appropriate point.
+ */
+static colour trace(scene const *sc, sphere const *skip,
+	            vector from, vector dir, colour premul)
+{
+  double dist;
+  sphere *intersecting = intersect(sc, from, dir, &dist, skip);
+  if (!intersecting) {
+    /* Missed! Send ray off to darkest infinity */
+    return black;
+  } else {
+    colour result = premul;
+    texture(sc, intersecting, from, dir, dist, &result);
+    return result;
+  }
+}
+
+static double intersect_sphere(sphere const *sp, vector from, vector dir)
+{
+   vector v = sp->center;
+   SUB(v, from);
+   double b = DOT(dir, v);
+   double d = b*b - DOT(v,v) + sp->radius * sp->radius;
+   if (d > 0) {
+     /* Intersection! */
+     double s = b - sqrt(d);
+     if (s > 0) {
+       return s;
+     }
+   }
+   return INFINITY;
+}
+
 /* Trace a unit ray, to find an intersection */
-static sphere *trace(scene const *sc, vector from, vector direction, double *dist, int ignore)
+static sphere *intersect(scene const *sc, vector from, vector direction, double *dist, sphere const *ignore)
 {
  double nearest_dist = HUGE_VAL;
  sphere *nearest_sphere = NULL;
  int i;
 
- /* Intermediate values */
- vector v;
- double b, d, s;
-
  for (i = 0; i < sc->num_spheres; i++) {
-   if (i == ignore)
+   if (sc->spheres + i == ignore)
      continue;
-   v = sc->spheres[i].center;
-   SUB(v, from);
-   b = DOT(direction, v);
-   d = b*b - DOT(v,v) + sc->spheres[i].radius*sc->spheres[i].radius;
-   if (d > 0) {
-     /* Intersection! */
-     s = b - sqrt(d);
-     if ((s > 0) && (s < nearest_dist)) {
-        /* We've hit it going forwards... */
-        nearest_dist = s;
-        nearest_sphere = sc->spheres+i;
-     }
+   double this_dist = intersect_sphere(sc->spheres + i, from, direction);
+   if (this_dist < nearest_dist) {
+        nearest_dist = this_dist;
+        nearest_sphere = sc->spheres + i;
    }
  }
 
@@ -77,7 +104,6 @@ static sphere *trace(scene const *sc, vector from, vector direction, double *dis
    *dist = nearest_dist;
  return nearest_sphere;
 }
-
 
 /* Texture a point */
 static void texture(scene const *sc, sphere *s, vector from, vector dir, double dist, colour *col)
@@ -128,7 +154,7 @@ static void texture(scene const *sc, sphere *s, vector from, vector dir, double 
    /* Light is on right side - check we can see it. */
    tmp2 = l;
    MULT(tmp2, -1.0);
-   if (s != trace(sc, sc->lights[i].loc, tmp2, NULL, -1))
+   if (s != intersect(sc, sc->lights[i].loc, tmp2, NULL, NULL))
      continue;
 
    /* Diffuse colour */
@@ -153,16 +179,7 @@ static void texture(scene const *sc, sphere *s, vector from, vector dir, double 
 
  if (col->r + col->g + col->b > REFLECTSTOP) {
    /* Enough light to make it worth tracing further */
-   sphere *intersect;
-   double dist;
-
-   intersect = trace(sc, w, r, &dist, s - sc->spheres);
-   if (!intersect) {
-     /* Missed! Send ray off to darkest infinity */
-     *col = black;
-   } else {
-     texture(sc, intersect, w, r, dist, col);
-   }
+   *col = trace(sc, s, w, r, *col);
  } else {
    /* Not enough light to bother tracing further. */
    *col = black;
@@ -180,12 +197,9 @@ void render(scene const *sc, int width, int height, colour *image)
  vector origin = {0.0, 0.0, 0.0};
  vector ray;
  int x, y;
- sphere *intersect;
- double dist;
  for (y = 0; y < height; y++)
    for (x = 0; x < width; x++)
      image[y*width+x] = white;
-
 
  printf("Ray Tracing (%d):\n", height);
  for (y = 0; y < height; y++) {
@@ -195,13 +209,7 @@ void render(scene const *sc, int width, int height, colour *image)
      ray.y = y - height/2;
      ray.z = width/2;
      NORMALISE(ray);
-     intersect = trace(sc, origin, ray, &dist, -1);
-     if (!intersect) {
-        /* Missed! Send ray off to darkest infinity */
-        image[y*width+x] = black;
-     } else {
-        texture(sc, intersect, origin, ray, dist,image + y*width + x);
-     }
+     image[y * width + x] = trace(sc, NULL, origin, ray, white);
    }
  }
 }
