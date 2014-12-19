@@ -14,6 +14,20 @@
 #define WIDTH 1280
 #define HEIGHT 1024
 
+/*
+light lights[] = {
+ {{2.0, 1.0, 0.0}, {1.0, 0.3, 0.0}},
+ {{-3.0, 1.0, 0.0}, {0.0, 1.0, 0.3}},
+ {{0.0, -4.0, 0.0}, {0.3, 0.0, 1.0}}
+};
+int no_lights = 3;
+*/
+
+light lights[] = {
+ {{2.0, 1.0, 0.0}, {1.0, 1.0, 1.0}},
+};
+int num_lights = 1;
+
 /* Make a spherical shell filled with spheres. */
 static scene *make_scene(double min, double max, int count)
 {
@@ -80,6 +94,8 @@ static scene *make_scene(double min, double max, int count)
  scene *result = (scene *)malloc(sizeof(scene));
  result->spheres = spheres;
  result->num_spheres = num_spheres;
+ result->lights = lights;
+ result->num_lights = num_lights;
  return result;
 }
 

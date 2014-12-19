@@ -27,20 +27,6 @@
  * Global variables
  */
 
-/*
-light lights[] = {
- {{2.0, 1.0, 0.0}, {1.0, 0.3, 0.0}},
- {{-3.0, 1.0, 0.0}, {0.0, 1.0, 0.3}},
- {{0.0, -4.0, 0.0}, {0.3, 0.0, 1.0}}
-};
-int no_lights = 3;
-*/
-
-light lights[] = {
- {{2.0, 1.0, 0.0}, {1.0, 1.0, 1.0}},
-};
-int no_lights = 1;
-
 /* These 2 are for convenience. */
 colour white = {1.0, 1.0, 1.0};
 colour black = {0.0, 0.0, 0.0};
@@ -127,9 +113,9 @@ static void texture(scene const *sc, sphere *s, vector from, vector dir, double 
  c.r = c.g = c.b = 0.0;
 
  /* Diffuse and specular lighting. */
- for (i = 0; i < no_lights; i++) {
+ for (i = 0; i < sc->num_lights; i++) {
    /* Normalised vector pointing at the light source. */
-   l = lights[i].loc;
+   l = sc->lights[i].loc;
    SUB(l, w);
    NORMALISE(l);
 
@@ -143,17 +129,17 @@ static void texture(scene const *sc, sphere *s, vector from, vector dir, double 
    /* Light is on right side - check we can see it. */
    tmp2 = l;
    MULT(tmp2, -1.0);
-   if (s != trace(sc, lights[i].loc, tmp2, NULL, -1))
+   if (s != trace(sc, sc->lights[i].loc, tmp2, NULL, -1))
      continue;
 
    /* Diffuse colour */
-   SHADE(c, lights[i].col, s->diffuse, diffuse);
+   SHADE(c, sc->lights[i].col, s->diffuse, diffuse);
 
    /* Specular */
    specular = DOT(r, l);
    if (specular >= 0.0) {
      specular = pow(specular, 10);
-     SHADE(c, lights[i].col, s->specular, specular);
+     SHADE(c, sc->lights[i].col, s->specular, specular);
    }
  }
 

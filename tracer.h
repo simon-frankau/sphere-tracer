@@ -35,6 +35,8 @@ typedef struct {
 typedef struct {
  sphere *spheres;
  int num_spheres;
+ light *lights;
+ int num_lights;
 } scene;
   
 
