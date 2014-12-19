@@ -1,3 +1,3 @@
 #!/bin/sh
 
-cc tracer.c -lpng -O2 -o tracer
+gcc spheres.c tracer.c -lpng -O2 -Wall -ansi -o spheres

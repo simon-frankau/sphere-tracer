@@ -1,11 +1,7 @@
-/* Sphere ray-tracer program
- * (C) Copyright Simon Frankau 1999
+/* 
+ * Ray-tracing core
  *
- * This program should ray trace spheres.
- *
- * 22/04/1999 - sgf22 - Created
- * 23/04/1999 - sgf22 - Added sphere creation/multiple spheres
- * 24/04/1999 - sgf22 - Shadows and reflection
+ * (C) Copyright Simon Frankau 1999-2014
  */
 
 #include <stdlib.h>
@@ -13,56 +9,19 @@
 #include <time.h>
 #include <png.h>
 
-/* ------------------------------------------------------------
+#include "tracer.h"
+
+/* ------------------------------------------------------------------
  * Macros
  */
 
 /* #define DEBUG */
 
-#define WIDTH 1280
-#define HEIGHT 1024
-
 #define REFLECTSTOP 0.1
-
-#define NORMALISE(v) { double _len = sqrt(v.x*v.x + v.y*v.y + v.z*v.z); \
-                      v.x /= _len; v.y /= _len; v.z /= _len; }
-
-#define DOT(v1, v2) (v1.x*v2.x + v1.y*v2.y + v1.z*v2.z)
-
-#define ADD(v1, v2) {v1.x += v2.x; v1.y += v2.y; v1.z += v2.z;}
-
-#define SUB(v1, v2) {v1.x -= v2.x; v1.y -= v2.y; v1.z -= v2.z;}
-
-#define MULT(v, m) {v.x *= m; v.y *= m; v.z *= m;}
 
 #define SHADE(c, i, k, p) { c.r += i.r * k.r * p; \
                            c.g += i.g * k.g * p; \
                            c.b += i.b * k.b * p; }
-
-/* ------------------------------------------------------------
- * Graphics structures.
- */
-
-typedef struct {
- double x, y, z;
-} vector;
-
-typedef struct {
- double r, g, b;
-} colour;
-
-typedef struct {
- vector center;
- double radius;
- colour diffuse;
- colour specular;
- colour reflective;
-} sphere;
-
-typedef struct {
- vector loc;
- colour col;
-} light;
 
 /* ------------------------------------------------------------
  * Global variables
@@ -93,116 +52,18 @@ colour black = {0.0, 0.0, 0.0};
  * Function prototypes.
  */
 
-/* Make a spherical shell filled with spheres. */
-void make_spheres(double min, double max, int count);
-
-/* Render a picture */
-void render(colour *image);
-
 /* Trace a unit ray, to find an intersection */
-sphere *trace(vector from, vector direction, double *dist, int ignore);
+static sphere *trace(vector from, vector direction, double *dist, int ignore);
 
 /* Texture a point */
-void texture(sphere *s, vector from, vector dir, double dist, colour *colour);
-
-/* Convert a colour array into an image suitable for saving. */
-void convert_image(int width, int height, colour const *im_in,
-                   png_bytep im_out);
-
-/* Write an image from an array of R, G and B png_bytes. */
-void write_image(int width, int height, png_bytep image,
-                 char const *filename);
-
+static void texture(sphere *s, vector from, vector dir, double dist, colour *colour);
 
 /* ------------------------------------------------------------
  * Functions.
  */
 
-int main(void) {
- colour *image;
- png_byte *image2;
-
-#ifdef DEBUG
- srand(0);
-#else
- srand(time(NULL));
-#endif
-
- image = (colour *)malloc(WIDTH*HEIGHT*sizeof(colour));
- image2 = (png_bytep)malloc(WIDTH*HEIGHT*3);
- make_spheres(5, 10, 1000);
- render(image);
- convert_image(WIDTH, HEIGHT, image, image2);
- write_image(WIDTH, HEIGHT, image2, "test.png");
- return 0;
-}
-
-/* Make a spherical shell filled with spheres. */
-void make_spheres(double min, double max, int count)
-{
- double radius, theta, phi, cosphi;
- double dist;
- int i, j;
-
- spheres = (sphere *)malloc(count * sizeof(sphere));
- if (!spheres) {
-   printf("Couldn't allocated spheres storage.\n");
-   exit(1);
- }
- no_spheres = count;
-
- printf("Making spheres (%d):\n", count);
-
- for (i = 0; i < count; i++) {
-   do {
-     radius = (max-min)*rand()/RAND_MAX + min;
-     theta = 2.0*M_PI*rand()/RAND_MAX;
-     phi = 2.0*M_PI*rand()/RAND_MAX - M_PI;
-
-     cosphi = cos(phi);
-     spheres[i].center.x = radius*cos(theta)*cosphi;
-     spheres[i].center.y = radius*sin(theta)*cosphi;
-     spheres[i].center.z = radius*sin(phi);
-
-     spheres[i].radius = max-radius;
-     if (radius-min < spheres[i].radius)
-        spheres[i].radius = radius-min;
-
-     /* Check the radius, etc. */
-     j = 0;
-     while (j < i) {
-        vector v;
-        v = spheres[i].center;
-        SUB(v,spheres[j].center);
-        dist = sqrt(DOT(v, v)) - spheres[j].radius;
-        if (dist < spheres[i].radius)
-          spheres[i].radius = dist;
-        if (dist <= 0.0)
-          break;
-        j++;
-     }
-   } while (spheres[i].radius <= 0.0);
-   /* Random colour, with some white specular part. */
-   spheres[i].diffuse.r = 1.0*rand()/RAND_MAX;
-   spheres[i].diffuse.g = 1.0*rand()/RAND_MAX;
-   spheres[i].diffuse.b = 1.0*rand()/RAND_MAX;
-
-   spheres[i].specular.r
-     = spheres[i].specular.g
-     = spheres[i].specular.b
-     = 0.5;
-
-   spheres[i].reflective.r
-     = spheres[i].reflective.g
-     = spheres[i].reflective.b
-     = 0.5;
-
-   printf("%d\n", i+1);
- }
-}
-
 /* Trace a unit ray, to find an intersection */
-sphere *trace(vector from, vector direction, double *dist, int ignore)
+static sphere *trace(vector from, vector direction, double *dist, int ignore)
 {
  double nearest_dist = HUGE_VAL;
  sphere *nearest_sphere = NULL;
@@ -237,7 +98,7 @@ sphere *trace(vector from, vector direction, double *dist, int ignore)
 
 
 /* Texture a point */
-void texture(sphere *s, vector from, vector dir, double dist, colour *col)
+static void texture(sphere *s, vector from, vector dir, double dist, colour *col)
 {
  /* Texture by the nearest thing we hit. */
  vector w, n, l, r;
@@ -332,32 +193,32 @@ void texture(sphere *s, vector from, vector dir, double dist, colour *col)
 }
 
 /* Render a picture */
-void render(colour *image)
+void render(int width, int height, colour *image)
 {
  vector origin = {0.0, 0.0, 0.0};
  vector ray;
  int x, y;
  sphere *intersect;
  double dist;
- for (y = 0; y < HEIGHT; y++)
-   for (x = 0; x < WIDTH; x++)
-     image[y*WIDTH+x] = white;
+ for (y = 0; y < height; y++)
+   for (x = 0; x < width; x++)
+     image[y*width+x] = white;
 
 
- printf("Ray Tracing (%d):\n", HEIGHT);
- for (y = 0; y < HEIGHT; y++) {
+ printf("Ray Tracing (%d):\n", height);
+ for (y = 0; y < height; y++) {
    printf("%d\n", y);
-   for (x = 0; x < WIDTH; x++) {
-     ray.x = x - WIDTH/2;
-     ray.y = y - HEIGHT/2;
-     ray.z = WIDTH/2;
+   for (x = 0; x < width; x++) {
+     ray.x = x - width/2;
+     ray.y = y - height/2;
+     ray.z = width/2;
      NORMALISE(ray);
      intersect = trace(origin, ray, &dist, -1);
      if (!intersect) {
         /* Missed! Send ray off to darkest infinity */
-        image[y*WIDTH+x] = black;
+        image[y*width+x] = black;
      } else {
-        texture(intersect, origin, ray, dist,image + y*WIDTH + x);
+        texture(intersect, origin, ray, dist,image + y*width + x);
      }
    }
  }
