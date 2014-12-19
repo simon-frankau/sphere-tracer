@@ -1,5 +1,5 @@
 /* 
- * Ray-tracing core
+ * tracer.h: Ray-tracing core
  *
  * (C) Copyright Simon Frankau 1999-2014
  */
@@ -61,13 +61,5 @@ typedef struct {
 
 /* Render a picture */
 void render(scene const *scene_in, int width, int height, colour *image);
-
-/* Convert a colour array into an image suitable for saving. */
-void convert_image(int width, int height, colour const *im_in,
-                   png_bytep im_out);
-
-/* Write an image from an array of R, G and B png_bytes. */
-void write_image(int width, int height, png_bytep image,
-                 char const *filename);
 
 #endif // TRACER_H_INCLUDED

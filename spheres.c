@@ -1,15 +1,16 @@
 /*
- * Sphere scene generator/renderer
+ * spheres.c: Sphere scene generator/renderer
  *
  * (C) Copyright Simon Frankau 1999-2014
  */
 
 #include <math.h>
-#include <png.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "tracer.h"
+#include "png_render.h"
 
 #define WIDTH 1280
 #define HEIGHT 1024
@@ -101,20 +102,13 @@ static scene *make_scene(double min, double max, int count)
 
 
 int main(void) {
- colour *image;
- png_byte *image2;
-
 #ifdef DEBUG
  srand(0);
 #else
  srand(time(NULL));
 #endif
 
- image = (colour *)malloc(WIDTH*HEIGHT*sizeof(colour));
- image2 = (png_bytep)malloc(WIDTH*HEIGHT*3);
  scene *sc = make_scene(5, 10, 1000);
- render(sc, WIDTH, HEIGHT, image);
- convert_image(WIDTH, HEIGHT, image, image2);
- write_image(WIDTH, HEIGHT, image2, "test.png");
+ png_render(sc, WIDTH, HEIGHT, "test.png");
  return 0;
 }
