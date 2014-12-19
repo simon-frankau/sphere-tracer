@@ -15,18 +15,18 @@
 #define HEIGHT 1024
 
 /* Make a spherical shell filled with spheres. */
-static void make_spheres(double min, double max, int count)
+static scene *make_scene(double min, double max, int count)
 {
  double radius, theta, phi, cosphi;
  double dist;
  int i, j;
 
- spheres = (sphere *)malloc(count * sizeof(sphere));
+ sphere *spheres = (sphere *)malloc(count * sizeof(sphere));
  if (!spheres) {
    printf("Couldn't allocated spheres storage.\n");
    exit(1);
  }
- no_spheres = count;
+ int num_spheres = count;
 
  printf("Making spheres (%d):\n", count);
 
@@ -76,6 +76,11 @@ static void make_spheres(double min, double max, int count)
 
    printf("%d\n", i+1);
  }
+
+ scene *result = (scene *)malloc(sizeof(scene));
+ result->spheres = spheres;
+ result->num_spheres = num_spheres;
+ return result;
 }
 
 
@@ -91,8 +96,8 @@ int main(void) {
 
  image = (colour *)malloc(WIDTH*HEIGHT*sizeof(colour));
  image2 = (png_bytep)malloc(WIDTH*HEIGHT*3);
- make_spheres(5, 10, 1000);
- render(WIDTH, HEIGHT, image);
+ scene *sc = make_scene(5, 10, 1000);
+ render(sc, WIDTH, HEIGHT, image);
  convert_image(WIDTH, HEIGHT, image, image2);
  write_image(WIDTH, HEIGHT, image2, "test.png");
  return 0;

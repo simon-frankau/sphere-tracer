@@ -32,6 +32,12 @@ typedef struct {
  colour col;
 } light;
 
+typedef struct {
+ sphere *spheres;
+ int num_spheres;
+} scene;
+  
+
 /* ------------------------------------------------------------------
  * Macros
  */
@@ -48,18 +54,11 @@ typedef struct {
 #define MULT(v, m) {v.x *= m; v.y *= m; v.z *= m;}
 
 /* ------------------------------------------------------------------
- * Global variables (ick!)
- */
-
-extern sphere *spheres;
-extern int no_spheres;
-
-/* ------------------------------------------------------------------
  * Exported functions
  */
 
 /* Render a picture */
-void render(int width, int height, colour *image);
+void render(scene const *scene_in, int width, int height, colour *image);
 
 /* Convert a colour array into an image suitable for saving. */
 void convert_image(int width, int height, colour const *im_in,
