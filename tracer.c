@@ -42,7 +42,7 @@ colour black = {0.0, 0.0, 0.0};
 static sphere *intersect(scene const *sc, vector from, vector direction, double *dist, sphere const *ignore);
 
 /* Texture a point */
-static void texture(scene const *sc, sphere *s, vector from, vector dir, double dist, colour *colour);
+static void texture(scene const *sc, sphere *s, vector w, vector dir, colour *colour);
 
 /* ------------------------------------------------------------
  * Functions.
@@ -61,8 +61,13 @@ static colour trace(scene const *sc, sphere const *skip,
     /* Missed! Send ray off to darkest infinity */
     return black;
   } else {
+     /* Find point of intersection, w */
+    vector w = dir;
+    MULT(w, dist);
+    ADD(w, from);
+
     colour result = premul;
-    texture(sc, intersecting, from, dir, dist, &result);
+    texture(sc, intersecting, w, dir, &result);
     return result;
   }
 }
@@ -84,7 +89,11 @@ static double intersect_sphere(sphere const *sp, vector from, vector dir)
 }
 
 /* Trace a unit ray, to find an intersection */
-static sphere *intersect(scene const *sc, vector from, vector direction, double *dist, sphere const *ignore)
+static sphere *intersect(scene const *sc,
+			 vector from,
+			 vector direction,
+			 double *dist,
+			 sphere const *ignore)
 {
  double nearest_dist = HUGE_VAL;
  sphere *nearest_sphere = NULL;
@@ -106,7 +115,11 @@ static sphere *intersect(scene const *sc, vector from, vector direction, double 
 }
 
 /* Texture a point */
-static void texture(scene const *sc, sphere *s, vector from, vector dir, double dist, colour *col)
+static void texture(scene const *sc,
+		    sphere *s,
+		    vector w, /* Point of intersection */
+		    vector dir,
+		    colour *col)
 {
  /* Texture by the nearest thing we hit. */
  vector w, n, l, r;
@@ -116,11 +129,6 @@ static void texture(scene const *sc, sphere *s, vector from, vector dir, double 
  int i;
 
  colour c;
-
- /* Find point of intersection, w */
- w = dir;
- MULT(w, dist);
- ADD(w, from);
 
  /* And the unit normal at that point, n */
  n = w;
