@@ -1,4 +1,4 @@
-/* 
+/*
  * png_render.h: Call render and write the results to a PNG.
  *
  * (C) Copyright Simon Frankau 1999-2014

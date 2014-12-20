@@ -1,4 +1,4 @@
-/* 
+/*
  * tracer.h: Ray-tracing core
  *
  * (C) Copyright Simon Frankau 1999-2014

@@ -1,4 +1,4 @@
-/* 
+/*
  * tracer.c: Ray-tracing core
  *
  * (C) Copyright Simon Frankau 1999-2014
@@ -45,7 +45,7 @@ static surface *intersect(scene const *sc, vector from, vector direction, double
 
 /* Texture a point */
 static void texture(scene const *sc, surface const *surf,
-      	            vector w, vector n, vector dir, colour *colour);
+                    vector w, vector n, vector dir, colour *colour);
 
 /* ------------------------------------------------------------
  * Functions.
@@ -70,7 +70,7 @@ static colour trace(scene const *sc, surface const *skip,
     vector w = dir;
     MULT(w, dist);
     ADD(w, from);
-    
+
     colour result = premul;
     texture(sc, intersecting, w, sphere_normal(intersecting, w), dir, &result);
     return result;

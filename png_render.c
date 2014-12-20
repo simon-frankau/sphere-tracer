@@ -1,4 +1,4 @@
-/* 
+/*
  * png_render.c: Call render and write the results to a PNG.
  *
  * (C) Copyright Simon Frankau 1999-2014
@@ -11,7 +11,7 @@
 
 /* Convert a colour array into an image suitable for saving. */
 static void convert_image(int width, int height, colour const *im_in,
-			  png_bytep im_out)
+                          png_bytep im_out)
 {
  int x, y;
  int r, g, b;
@@ -45,7 +45,7 @@ static void convert_image(int width, int height, colour const *im_in,
 
 /* Write an image from an array of R, G and B png_bytes. */
 static void write_image(int width, int height, png_bytep image,
-			char const *filename)
+                        char const *filename)
 {
  FILE *fp;
  png_structp png_ptr;
