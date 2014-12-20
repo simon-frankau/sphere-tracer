@@ -41,26 +41,27 @@ colour black = {0.0, 0.0, 0.0};
  */
 
 /* Trace a unit ray, to find an intersection */
-static sphere *intersect(scene const *sc, vector from, vector direction, double *dist, sphere const *ignore);
+static surface *intersect(scene const *sc, vector from, vector direction, double *dist, surface const *ignore);
 
 /* Texture a point */
-static void texture(scene const *sc, sphere *s, vector w, vector n, vector dir, colour *colour);
+static void texture(scene const *sc, surface const *surf,
+      	            vector w, vector n, vector dir, colour *colour);
 
 /* ------------------------------------------------------------
  * Functions.
  */
 
-static vector sphere_normal(sphere const *sp, vector w); /* TODO */
+static vector sphere_normal(surface const *sp, vector w); /* TODO */
 
 /* Find the colour for a given ray. Rather than post-multiply for
  * absorbtion further down the line, we pre-multiply, allowing us
  * to cut off at an appropriate point.
  */
-static colour trace(scene const *sc, sphere const *skip,
-	            vector from, vector dir, colour premul)
+static colour trace(scene const *sc, surface const *skip,
+                    vector from, vector dir, colour premul)
 {
   double dist;
-  sphere *intersecting = intersect(sc, from, dir, &dist, skip);
+  surface *intersecting = intersect(sc, from, dir, &dist, skip);
   if (!intersecting) {
     /* Missed! Send ray off to darkest infinity */
     return black;
@@ -92,8 +93,11 @@ static double sphere_intersect(sphere const *sp, vector from, vector dir)
   return INFINITY;
 }
 
-static vector sphere_normal(sphere const *sp, vector w)
+static vector sphere_normal(surface const *s, vector w)
 {
+  /* TODO! */
+  sphere const *sp = (sphere const *)s;
+
   vector n = w;
   SUB(n, sp->center);
   NORMALISE(n);
@@ -101,18 +105,18 @@ static vector sphere_normal(sphere const *sp, vector w)
 }
 
 /* Trace a unit ray, to find an intersection */
-static sphere *intersect(scene const *sc,
-			 vector from,
-			 vector direction,
-			 double *dist,
-			 sphere const *ignore)
+static surface *intersect(scene const *sc,
+                          vector from,
+                          vector direction,
+                          double *dist,
+                          surface const *ignore)
 {
   double nearest_dist = HUGE_VAL;
   sphere *nearest_sphere = NULL;
   int i;
 
   for (i = 0; i < sc->num_spheres; i++) {
-    if (sc->spheres + i == ignore)
+    if (&(sc->spheres[i].props) == ignore)
       continue;
     double this_dist = sphere_intersect(sc->spheres + i, from, direction);
     if (this_dist < nearest_dist) {
@@ -124,16 +128,16 @@ static sphere *intersect(scene const *sc,
   if (dist) {
     *dist = nearest_dist;
   }
-  return nearest_sphere;
+  return nearest_sphere != NULL ? &nearest_sphere->props : NULL;
 }
 
 /* Texture a point */
 static void texture(scene const *sc,
-		    sphere *s,
-		    vector w, /* Point of intersection */
-		    vector n, /* Surface normal */
-		    vector dir,
-		    colour *col)
+                    surface const *surf,
+                    vector w, /* Point of intersection */
+                    vector n, /* Surface normal */
+                    vector dir,
+                    colour *col)
 {
   /* Texture by the nearest thing we hit. */
   vector l, r;
@@ -171,17 +175,17 @@ static void texture(scene const *sc,
     /* Light is on right side - check we can see it. */
     tmp2 = l;
     MULT(tmp2, -1.0);
-    if (s != intersect(sc, sc->lights[i].loc, tmp2, NULL, NULL))
+    if (surf != intersect(sc, sc->lights[i].loc, tmp2, NULL, NULL))
       continue;
 
     /* Diffuse colour */
-    SHADE(c, sc->lights[i].col, s->diffuse, diffuse);
+    SHADE(c, sc->lights[i].col, surf->diffuse, diffuse);
 
     /* Specular */
     specular = DOT(r, l);
     if (specular >= 0.0) {
       specular = pow(specular, 10);
-      SHADE(c, sc->lights[i].col, s->specular, specular);
+      SHADE(c, sc->lights[i].col, surf->specular, specular);
     }
   }
 
@@ -190,13 +194,13 @@ static void texture(scene const *sc,
   c.g *= col->g;
   c.b *= col->b;
 
-  col->r *= s->reflective.r;
-  col->g *= s->reflective.g;
-  col->b *= s->reflective.b;
+  col->r *= surf->reflective.r;
+  col->g *= surf->reflective.g;
+  col->b *= surf->reflective.b;
 
   if (col->r + col->g + col->b > REFLECTSTOP) {
     /* Enough light to make it worth tracing further */
-    *col = trace(sc, s, w, r, *col);
+    *col = trace(sc, surf, w, r, *col);
   } else {
     /* Not enough light to bother tracing further. */
     *col = black;

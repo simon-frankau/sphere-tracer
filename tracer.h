@@ -12,33 +12,36 @@
  */
 
 typedef struct {
- double x, y, z;
+  double x, y, z;
 } vector;
 
 typedef struct {
- double r, g, b;
+  double r, g, b;
 } colour;
 
 typedef struct {
- vector center;
- double radius;
- colour diffuse;
- colour specular;
- colour reflective;
+  colour diffuse;
+  colour specular;
+  colour reflective;
+} surface;
+
+typedef struct {
+  surface props;
+  vector center;
+  double radius;
 } sphere;
 
 typedef struct {
- vector loc;
- colour col;
+  vector loc;
+  colour col;
 } light;
 
 typedef struct {
- sphere *spheres;
- int num_spheres;
- light *lights;
- int num_lights;
+  sphere *spheres;
+  int num_spheres;
+  light *lights;
+  int num_lights;
 } scene;
-  
 
 /* ------------------------------------------------------------------
  * Macros

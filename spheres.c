@@ -75,18 +75,18 @@ static scene *make_scene(double min, double max, int count)
      }
    } while (spheres[i].radius <= 0.0);
    /* Random colour, with some white specular part. */
-   spheres[i].diffuse.r = 1.0*rand()/RAND_MAX;
-   spheres[i].diffuse.g = 1.0*rand()/RAND_MAX;
-   spheres[i].diffuse.b = 1.0*rand()/RAND_MAX;
+   spheres[i].props.diffuse.r = 1.0*rand()/RAND_MAX;
+   spheres[i].props.diffuse.g = 1.0*rand()/RAND_MAX;
+   spheres[i].props.diffuse.b = 1.0*rand()/RAND_MAX;
 
-   spheres[i].specular.r
-     = spheres[i].specular.g
-     = spheres[i].specular.b
+   spheres[i].props.specular.r
+     = spheres[i].props.specular.g
+     = spheres[i].props.specular.b
      = 0.5;
 
-   spheres[i].reflective.r
-     = spheres[i].reflective.g
-     = spheres[i].reflective.b
+   spheres[i].props.reflective.r
+     = spheres[i].props.reflective.g
+     = spheres[i].props.reflective.b
      = 0.5;
 
    printf("%d\n", i+1);
