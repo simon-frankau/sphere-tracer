@@ -21,6 +21,9 @@
 #ifndef INFINITY
 #define INFINITY (1.0 / 0.0)
 #endif
+#ifndef EPSILON
+#define EPSILON 1.0e-7
+#endif
 
 #define SHADE(c, i, k, p) { \
     c.r += i.r * k.r * p; \
@@ -41,7 +44,8 @@ colour black = {0.0, 0.0, 0.0};
  */
 
 /* Trace a unit ray, to find an intersection */
-static surface *intersect(scene const *sc, vector from, vector direction, double *dist, surface const *ignore);
+static surface *intersect(scene const *sc, vector from, vector direction,
+                          double *dist);
 
 /* Texture a point */
 static void texture(scene const *sc, surface const *surf,
@@ -57,11 +61,10 @@ static vector sphere_normal(surface const *sp, vector w); /* TODO */
  * absorbtion further down the line, we pre-multiply, allowing us
  * to cut off at an appropriate point.
  */
-static colour trace(scene const *sc, surface const *skip,
-                    vector from, vector dir, colour premul)
+static colour trace(scene const *sc, vector from, vector dir, colour premul)
 {
   double dist;
-  surface *intersecting = intersect(sc, from, dir, &dist, skip);
+  surface *intersecting = intersect(sc, from, dir, &dist);
   if (!intersecting) {
     /* Missed! Send ray off to darkest infinity */
     return black;
@@ -108,18 +111,15 @@ static vector sphere_normal(surface const *s, vector w)
 static surface *intersect(scene const *sc,
                           vector from,
                           vector direction,
-                          double *dist,
-                          surface const *ignore)
+                          double *dist)
 {
-  double nearest_dist = HUGE_VAL;
+  double nearest_dist = INFINITY;
   sphere *nearest_sphere = NULL;
   int i;
 
   for (i = 0; i < sc->num_spheres; i++) {
-    if (&(sc->spheres[i].props) == ignore)
-      continue;
     double this_dist = sphere_intersect(sc->spheres + i, from, direction);
-    if (this_dist < nearest_dist) {
+    if (EPSILON < this_dist && this_dist < nearest_dist) {
       nearest_dist = this_dist;
       nearest_sphere = sc->spheres + i;
     }
@@ -175,7 +175,7 @@ static void texture(scene const *sc,
     /* Light is on right side - check we can see it. */
     tmp2 = l;
     MULT(tmp2, -1.0);
-    if (surf != intersect(sc, sc->lights[i].loc, tmp2, NULL, NULL))
+    if (surf != intersect(sc, sc->lights[i].loc, tmp2, NULL))
       continue;
 
     /* Diffuse colour */
@@ -200,7 +200,7 @@ static void texture(scene const *sc,
 
   if (col->r + col->g + col->b > REFLECTSTOP) {
     /* Enough light to make it worth tracing further */
-    *col = trace(sc, surf, w, r, *col);
+    *col = trace(sc, w, r, *col);
   } else {
     /* Not enough light to bother tracing further. */
     *col = black;
@@ -230,7 +230,7 @@ void render(scene const *sc, int width, int height, colour *image)
       ray.y = y - height/2;
       ray.z = width/2;
       NORMALISE(ray);
-      image[y * width + x] = trace(sc, NULL, origin, ray, white);
+      image[y * width + x] = trace(sc, origin, ray, white);
     }
   }
 }
