@@ -45,7 +45,7 @@ colour black = {0.0, 0.0, 0.0};
 
 /* Trace a unit ray, to find an intersection */
 static surface *intersect(scene const *sc, vector from, vector direction,
-                          double *dist);
+                          double *dist, vector *normal);
 
 /* Texture a point */
 static void texture(scene const *sc, surface const *surf,
@@ -55,8 +55,6 @@ static void texture(scene const *sc, surface const *surf,
  * Functions.
  */
 
-static vector sphere_normal(surface const *sp, vector w); /* TODO */
-
 /* Find the colour for a given ray. Rather than post-multiply for
  * absorbtion further down the line, we pre-multiply, allowing us
  * to cut off at an appropriate point.
@@ -64,7 +62,8 @@ static vector sphere_normal(surface const *sp, vector w); /* TODO */
 static colour trace(scene const *sc, vector from, vector dir, colour premul)
 {
   double dist;
-  surface *intersecting = intersect(sc, from, dir, &dist);
+  vector normal;
+  surface *intersecting = intersect(sc, from, dir, &dist, &normal);
   if (!intersecting) {
     /* Missed! Send ray off to darkest infinity */
     return black;
@@ -75,7 +74,7 @@ static colour trace(scene const *sc, vector from, vector dir, colour premul)
     ADD(w, from);
 
     colour result = premul;
-    texture(sc, intersecting, w, sphere_normal(intersecting, w), dir, &result);
+    texture(sc, intersecting, w, normal, dir, &result);
     return result;
   }
 }
@@ -96,11 +95,8 @@ static double sphere_intersect(sphere const *sp, vector from, vector dir)
   return INFINITY;
 }
 
-static vector sphere_normal(surface const *s, vector w)
+static vector sphere_normal(sphere const *sp, vector w)
 {
-  /* TODO! */
-  sphere const *sp = (sphere const *)s;
-
   vector n = w;
   SUB(n, sp->center);
   NORMALISE(n);
@@ -111,7 +107,8 @@ static vector sphere_normal(surface const *s, vector w)
 static surface *intersect(scene const *sc,
                           vector from,
                           vector direction,
-                          double *dist)
+                          double *dist,
+			  vector *normal)
 {
   double nearest_dist = INFINITY;
   sphere *nearest_sphere = NULL;
@@ -128,7 +125,16 @@ static surface *intersect(scene const *sc,
   if (dist) {
     *dist = nearest_dist;
   }
-  return nearest_sphere != NULL ? &nearest_sphere->props : NULL;
+  if (nearest_sphere != NULL) {
+    if (normal != NULL) {
+      vector w = direction;
+      MULT(w, nearest_dist);
+      ADD(w, from);
+      *normal = sphere_normal(nearest_sphere, w);
+    }
+    return &(nearest_sphere->props);
+  }
+  return NULL;
 }
 
 /* Texture a point */
@@ -175,7 +181,7 @@ static void texture(scene const *sc,
     /* Light is on right side - check we can see it. */
     tmp2 = l;
     MULT(tmp2, -1.0);
-    if (surf != intersect(sc, sc->lights[i].loc, tmp2, NULL))
+    if (surf != intersect(sc, sc->lights[i].loc, tmp2, NULL, NULL))
       continue;
 
     /* Diffuse colour */
