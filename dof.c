@@ -12,7 +12,7 @@
 #include "tracer.h"
 #include "png_render.h"
 
-#define WIDTH 512
+#define WIDTH 1024
 #define HEIGHT 512
 
 static light lights[] = {
@@ -102,8 +102,8 @@ static scene *make_scene(double min, double max, int count)
  result->lights = lights;
  result->num_lights = num_lights;
 
- result->num_samples    = 100;
- result->blur_size      = 3.0;
+ result->num_samples    = 1000;
+ result->blur_size      = 6.0;
  result->antialias_size = 0.5;
  result->focal_depth    = 5.0;
 
