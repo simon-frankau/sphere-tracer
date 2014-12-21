@@ -216,7 +216,7 @@ static void texture(scene const *sc,
     SUB(l, w);
     NORMALISE(l);
 
-    /* Dot product of the number and vector to the light.
+    /* Dot product of the normal and vector to the light.
      * Used to calculate the amount of diffuse light received.
      * If negative, we are facing away from the light (no light).
      */
@@ -228,9 +228,9 @@ static void texture(scene const *sc,
     MULT(tmp2, -1.0);
     double dist;
     intersect(sc, sc->lights[i].loc, tmp2, &dist, NULL);
-    vector to_l = l;
+    vector to_l = w;
     SUB(to_l, sc->lights[i].loc);
-    if (dist*dist < DOT(to_l, to_l) + EPSILON) {
+    if (dist*dist + EPSILON < DOT(to_l, to_l)) {
       continue;
     }
 
