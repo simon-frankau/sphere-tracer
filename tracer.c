@@ -233,7 +233,7 @@ void render(scene const *sc, int width, int height, colour *image)
     printf("%d\n", y);
     for (x = 0; x < width; x++) {
       ray.x = x - width/2;
-      ray.y = y - height/2;
+      ray.y = height/2 - y;
       ray.z = width/2;
       NORMALISE(ray);
       image[y * width + x] = trace(sc, origin, ray, white);
