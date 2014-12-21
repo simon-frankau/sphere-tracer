@@ -101,6 +101,12 @@ static scene *make_scene(double min, double max, int count)
  result->num_checkerboards = num_checkerboards;
  result->lights = lights;
  result->num_lights = num_lights;
+
+ result->num_samples    = 100;
+ result->blur_size      = 3.0;
+ result->antialias_size = 0.5;
+ result->focal_depth    = 5.0;
+
  return result;
 }
 

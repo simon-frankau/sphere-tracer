@@ -51,6 +51,10 @@ typedef struct {
   int num_checkerboards;
   light *lights;
   int num_lights;
+  int num_samples;
+  double blur_size;
+  double antialias_size;
+  double focal_depth;
 } scene;
 
 /* ------------------------------------------------------------------

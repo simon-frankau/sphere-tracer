@@ -268,10 +268,29 @@ static void texture(scene const *sc,
   col->b += c.b;
 }
 
+/* Create a normally distributed lump of noise in the X-Z plane */
+static vector noise_xy(double std_var) {
+  /* Box-Muller */
+  double u1 = ((double)rand() + 1.0) / ((double)RAND_MAX + 1.0);
+  double u2 = ((double)rand() + 1.0) / ((double)RAND_MAX + 1.0);
+  double r  = sqrt(-2.0 * log(u1));
+  double th = 2 * M_PI * u2;
+  double z0 = r * cos(th);
+  double z1 = r * sin(th);
+  vector v;
+  v.x = std_var * z0;
+  v.y = std_var * z1;
+  v.z = 0.0;
+  return v;
+}
+
 /* Render a picture */
 void render(scene const *sc, int width, int height, colour *image)
 {
-  vector origin = {0.0, 0.0, 0.0};
+  /* Make sure the noise we apply is reproduceable. */
+  srand(42);
+
+  vector origin;
   vector ray;
   int x, y;
   for (y = 0; y < height; y++)
@@ -282,11 +301,32 @@ void render(scene const *sc, int width, int height, colour *image)
   for (y = 0; y < height; y++) {
     printf("%d\n", y);
     for (x = 0; x < width; x++) {
-      ray.x = x - width/2;
-      ray.y = height/2 - y;
-      ray.z = width/2;
-      NORMALISE(ray);
-      image[y * width + x] = trace(sc, origin, ray, white);
+      colour c = { 0.0, 0.0, 0.0 };
+      int i = 0;
+      for (i = 0; i < sc->num_samples; i++) {
+	ray.x = x - width/2;
+	ray.y = height/2 - y;
+	ray.z = width/2;
+
+	/* Add noise to the ray. */
+	vector noise = noise_xy(sc->blur_size);
+	ADD(ray, noise);
+
+	/* And remove the noise at the focal distance. */
+	origin.x = - sc->focal_depth * noise.x / ray.z;
+	origin.y = - sc->focal_depth * noise.y / ray.z;
+	origin.z = 0.0;
+
+	/* And more noise to do antialiasing. */
+	vector aa_noise = noise_xy(sc->antialias_size);
+	ADD(ray, aa_noise);
+
+	NORMALISE(ray);
+	colour c2 = trace(sc, origin, ray, white);
+	c.r += c2.r; c.g += c2.g; c.b += c2.b;
+      }
+      c.r /= sc->num_samples; c.g /= sc->num_samples; c.b /= sc->num_samples;
+      image[y * width + x] = c;
     }
   }
 }
