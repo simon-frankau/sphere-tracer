@@ -126,6 +126,6 @@ int main(void) {
 #endif
 
  scene *sc = make_scene(5, 10, 1000);
- png_render(sc, WIDTH, HEIGHT, "test.png");
+ png_render(sc, WIDTH, HEIGHT, "spheres.png");
  return 0;
 }
