@@ -181,8 +181,13 @@ static void texture(scene const *sc,
     /* Light is on right side - check we can see it. */
     tmp2 = l;
     MULT(tmp2, -1.0);
-    if (surf != intersect(sc, sc->lights[i].loc, tmp2, NULL, NULL))
+    double dist;
+    intersect(sc, sc->lights[i].loc, tmp2, &dist, NULL);
+    vector to_l = l;
+    SUB(to_l, sc->lights[i].loc);
+    if (dist*dist < DOT(to_l, to_l) + EPSILON) {
       continue;
+    }
 
     /* Diffuse colour */
     SHADE(c, sc->lights[i].col, surf->diffuse, diffuse);
