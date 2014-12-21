@@ -39,6 +39,30 @@ static void set_surface(surface *s, double r, double g, double b, double shine)
     = shine;
 }
 
+/* Find a colour n/m th of the way around the colour wheel. */
+static colour colour_phase(int n, int m) {
+  /* We construct a wheel from two unit vectors perpendicular to the
+   * (1, 1, 1) vector (and each other) in colour-space.
+   */
+
+  colour c1;
+  c1.r = sqrt(1.0 / 2.0); c1.g = -c1.r; c1.b = 0.0;
+  colour c2;
+  c2.r = sqrt(1.0 / 6.0); c2.g = c2.r; c2.b = -2.0 * c2.r;
+
+  double phase = (n * 2 * M_PI) / m;
+  double colour_cos = cos(phase);
+  double colour_sin = sin(phase);
+
+  /* Construct point and normalise back to unit cube. */
+  colour c;
+  c.r = (colour_cos * c1.r + colour_sin * c2.r + 1.0) / 2.0;
+  c.g = (colour_cos * c1.g + colour_sin * c2.g + 1.0) / 2.0;
+  c.b = (colour_cos * c1.b + colour_sin * c2.b + 1.0) / 2.0;
+
+  return c;
+}
+
 /* Make a spherical shell filled with spheres. */
 static scene *make_scene(double min, double max, int count)
 {
@@ -52,17 +76,22 @@ static scene *make_scene(double min, double max, int count)
   int num_checkerboards = 1;
 
   /* Place a set of spheres. */
-  int num_spheres = 1;
+  int num_spheres = 5;
   sphere *spheres = (sphere *)malloc(num_spheres * sizeof(sphere));
 
   int i;
-  vector pos = { 0.0, -0.5, 3.0 };
+  vector pos = { -2.5, -0.5, 3.0 };
   double radius = pos.y - checkerboards.distance;
 
   for (i = 0; i < num_spheres; i++) {
     spheres[i].center = pos;
     spheres[i].radius = radius;
-    set_surface(&spheres[i].props, 0.5, 0.5, 0.5, 0.5);
+
+    colour c = colour_phase(i, num_spheres);
+    set_surface(&spheres[i].props, c.r, c.g, c.b, 0.5);
+
+    pos.x += 2.5;
+    pos.z += 2.0;
   }
 
  scene *result = (scene *)malloc(sizeof(scene));
