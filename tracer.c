@@ -103,6 +103,24 @@ static vector sphere_normal(sphere const *sp, vector w)
   return n;
 }
 
+static double plane_intersect(checkerboard const *pl, vector from, vector dir)
+{
+  double from_norm = DOT(from, pl->normal) - pl->distance;
+
+  if (from_norm < 0) {
+    return INFINITY;
+  }
+
+  double dir_norm = DOT(dir, pl->normal);
+
+  return - from_norm / dir_norm;
+}
+
+static vector plane_normal(checkerboard const *pl, vector w)
+{
+  return pl->normal;
+}
+
 /* Trace a unit ray, to find an intersection */
 static surface *intersect(scene const *sc,
                           vector from,
@@ -112,6 +130,7 @@ static surface *intersect(scene const *sc,
 {
   double nearest_dist = INFINITY;
   sphere *nearest_sphere = NULL;
+  checkerboard *nearest_checkerboard = NULL;
   int i;
 
   for (i = 0; i < sc->num_spheres; i++) {
@@ -122,18 +141,44 @@ static surface *intersect(scene const *sc,
     }
   }
 
+  for (i = 0; i < sc->num_checkerboards; i++) {
+    double this_dist = plane_intersect(sc->checkerboards + i, from, direction);
+    if (EPSILON < this_dist && this_dist < nearest_dist) {
+      nearest_dist = this_dist;
+      nearest_sphere = NULL;
+      nearest_checkerboard = sc->checkerboards + i;
+    }
+  }
+
+  vector w = direction;
+  MULT(w, nearest_dist);
+  ADD(w, from);
+
   if (dist) {
     *dist = nearest_dist;
   }
+
   if (nearest_sphere != NULL) {
     if (normal != NULL) {
-      vector w = direction;
-      MULT(w, nearest_dist);
-      ADD(w, from);
       *normal = sphere_normal(nearest_sphere, w);
     }
     return &(nearest_sphere->props);
   }
+
+  if (nearest_checkerboard != NULL) {
+    if (normal != NULL) {
+      *normal = plane_normal(nearest_checkerboard, w);
+    }
+    /* Cheesy checkerboard hardwired... */
+    int parity = (lrint(w.x) + lrint(w.z)) % 2;
+
+    surface *surface = parity ?
+           &(nearest_checkerboard->p1) :
+           &(nearest_checkerboard->p2);
+
+    return surface;
+  }
+
   return NULL;
 }
 

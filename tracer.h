@@ -31,6 +31,14 @@ typedef struct {
   double radius;
 } sphere;
 
+/* Quite specialist and hacky! */
+typedef struct {
+  vector normal;
+  double distance;
+  surface p1;
+  surface p2;
+} checkerboard;
+
 typedef struct {
   vector loc;
   colour col;
@@ -39,6 +47,8 @@ typedef struct {
 typedef struct {
   sphere *spheres;
   int num_spheres;
+  checkerboard *checkerboards;
+  int num_checkerboards;
   light *lights;
   int num_lights;
 } scene;

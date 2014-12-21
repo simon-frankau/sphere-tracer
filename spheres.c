@@ -16,18 +16,38 @@
 #define HEIGHT 512
 
 /*
-light lights[] = {
+static light lights[] = {
  {{2.0, 1.0, 0.0}, {1.0, 0.3, 0.0}},
  {{-3.0, 1.0, 0.0}, {0.0, 1.0, 0.3}},
  {{0.0, -4.0, 0.0}, {0.3, 0.0, 1.0}}
 };
-int no_lights = 3;
+static int no_lights = 3;
 */
 
-light lights[] = {
+static light lights[] = {
  {{2.0, 1.0, 0.0}, {1.0, 1.0, 1.0}},
 };
-int num_lights = 1;
+static int num_lights = 1;
+
+static checkerboard checkerboards;
+
+static void set_surface(surface *s)
+{
+  /* Random colour, with some white specular part. */
+   s->diffuse.r = 1.0*rand()/RAND_MAX;
+   s->diffuse.g = 1.0*rand()/RAND_MAX;
+   s->diffuse.b = 1.0*rand()/RAND_MAX;
+
+   s->specular.r
+     = s->specular.g
+     = s->specular.b
+     = 0.5;
+
+   s->reflective.r
+     = s->reflective.g
+     = s->reflective.b
+     = 0.5;
+}
 
 /* Make a spherical shell filled with spheres. */
 static scene *make_scene(double min, double max, int count)
@@ -74,32 +94,29 @@ static scene *make_scene(double min, double max, int count)
         j++;
      }
    } while (spheres[i].radius <= 0.0);
-   /* Random colour, with some white specular part. */
-   spheres[i].props.diffuse.r = 1.0*rand()/RAND_MAX;
-   spheres[i].props.diffuse.g = 1.0*rand()/RAND_MAX;
-   spheres[i].props.diffuse.b = 1.0*rand()/RAND_MAX;
-
-   spheres[i].props.specular.r
-     = spheres[i].props.specular.g
-     = spheres[i].props.specular.b
-     = 0.5;
-
-   spheres[i].props.reflective.r
-     = spheres[i].props.reflective.g
-     = spheres[i].props.reflective.b
-     = 0.5;
+ 
+   set_surface(&(spheres[i].props));
 
    printf("%d\n", i+1);
  }
 
+ checkerboards.normal.x = 0.0;
+ checkerboards.normal.y = 1.0;
+ checkerboards.normal.z = 0.0;
+ checkerboards.distance = -2.0;
+ set_surface(&checkerboards.p1);
+ set_surface(&checkerboards.p2);
+ int num_checkerboards = 1;
+
  scene *result = (scene *)malloc(sizeof(scene));
  result->spheres = spheres;
  result->num_spheres = num_spheres;
+ result->checkerboards = &checkerboards;
+ result->num_checkerboards = num_checkerboards;
  result->lights = lights;
  result->num_lights = num_lights;
  return result;
 }
-
 
 int main(void) {
 #ifdef DEBUG
