@@ -1,5 +1,5 @@
 /*
- * dof.c: Depth of field demo
+ * soft.c: Soft shadow demo
  *
  * (C) Copyright Simon Frankau 1999-2014
  */
@@ -12,11 +12,11 @@
 #include "tracer.h"
 #include "png_render.h"
 
-#define WIDTH 1024
+#define WIDTH 512
 #define HEIGHT 512
 
 static light lights[] = {
- {{10.0, 10.0, 3.0}, {1.0, 1.0, 1.0}},
+ {{10.0, 10.0, 3.0}, {0.0, 0.0, 0.0}},
 };
 static int num_lights = 1;
 
@@ -39,6 +39,7 @@ static void set_surface(surface *s, double r, double g, double b, double shine)
     = shine;
 }
 
+/* Make a spherical shell filled with spheres. */
 static scene *make_scene()
 {
   /* Place the checkerboard */
@@ -51,42 +52,34 @@ static scene *make_scene()
   int num_checkerboards = 1;
 
   /* Place a set of spheres. */
-  int num_spheres = 5;
+  int num_spheres = 1;
   sphere *spheres = (sphere *)malloc(num_spheres * sizeof(sphere));
 
-  int i;
-  vector pos = { -2.5, -0.5, 3.0 };
-  double radius = pos.y - checkerboards.distance;
+  vector pos = { 0.0, 0.0, 5.0 };
 
-  for (i = 0; i < num_spheres; i++) {
-    spheres[i].center = pos;
-    spheres[i].radius = radius;
+  spheres->center = pos;
+  spheres->radius = pos.y - checkerboards.distance;
 
-    colour c = colour_phase((double)i / num_spheres);
-    set_surface(&spheres[i].props, c.r, c.g, c.b, 0.5);
+  set_surface(&(spheres->props), 0.7, 0.7, 0.7, 0.5);
 
-    pos.x += 2.5;
-    pos.z += 2.0;
-  }
+  scene *result = (scene *)malloc(sizeof(scene));
+  result->spheres = spheres;
+  result->num_spheres = num_spheres;
+  result->checkerboards = &checkerboards;
+  result->num_checkerboards = num_checkerboards;
+  result->lights = lights;
+  result->num_lights = num_lights;
 
- scene *result = (scene *)malloc(sizeof(scene));
- result->spheres = spheres;
- result->num_spheres = num_spheres;
- result->checkerboards = &checkerboards;
- result->num_checkerboards = num_checkerboards;
- result->lights = lights;
- result->num_lights = num_lights;
+  result->num_samples    = 1000;
+  result->blur_size      = 0.0;
+  result->antialias_size = 0.5;
+  result->focal_depth    = 0.0;
 
- result->num_samples    = 1000;
- result->blur_size      = 6.0;
- result->antialias_size = 0.5;
- result->focal_depth    = 5.0;
-
- return result;
+  return result;
 }
 
 int main(void) {
   scene *sc = make_scene();
-  png_render(sc, WIDTH, HEIGHT, "dof.png");
+  png_render(sc, WIDTH, HEIGHT, "soft.png");
   return 0;
 }

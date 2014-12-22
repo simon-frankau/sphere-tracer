@@ -76,6 +76,9 @@ typedef struct {
  * Exported functions
  */
 
+/* Find a colour x in [0, 1] of the way around the colour wheel. */
+colour colour_phase(double x);
+
 /* Render a picture */
 void render(scene const *scene_in, int width, int height, colour *image);
 

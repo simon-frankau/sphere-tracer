@@ -55,6 +55,31 @@ static void texture(scene const *sc, surface const *surf,
  * Functions.
  */
 
+/* Find a colour x in [0, 1] of the way around the colour wheel. */
+colour colour_phase(double x)
+{
+  /* We construct a wheel from two unit vectors perpendicular to the
+   * (1, 1, 1) vector (and each other) in colour-space.
+   */
+
+  colour c1;
+  c1.r = sqrt(1.0 / 2.0); c1.g = -c1.r; c1.b = 0.0;
+  colour c2;
+  c2.r = sqrt(1.0 / 6.0); c2.g = c2.r; c2.b = -2.0 * c2.r;
+
+  double phase = x * 2 * M_PI;
+  double colour_cos = cos(phase);
+  double colour_sin = sin(phase);
+
+  /* Construct point and normalise back to unit cube. */
+  colour c;
+  c.r = (colour_cos * c1.r + colour_sin * c2.r + 1.0) / 2.0;
+  c.g = (colour_cos * c1.g + colour_sin * c2.g + 1.0) / 2.0;
+  c.b = (colour_cos * c1.b + colour_sin * c2.b + 1.0) / 2.0;
+
+  return c;
+}
+
 /* Find the colour for a given ray. Rather than post-multiply for
  * absorbtion further down the line, we pre-multiply, allowing us
  * to cut off at an appropriate point.
@@ -182,6 +207,8 @@ static surface *intersect(scene const *sc,
   return NULL;
 }
 
+#define SHADOW_SIZE 2.0
+
 /* Texture a point */
 static void texture(scene const *sc,
                     surface const *surf,
@@ -211,8 +238,21 @@ static void texture(scene const *sc,
 
   /* Diffuse and specular lighting. */
   for (i = 0; i < sc->num_lights; i++) {
+    vector light_loc = sc->lights[i].loc;
+    colour light_col = sc->lights[i].col;
+
+    double y_rand = ((double)rand())/RAND_MAX;
+    double z_rand = ((double)rand())/RAND_MAX;
+
+    light_loc.y += SHADOW_SIZE * (y_rand - 0.5);
+    light_loc.z += SHADOW_SIZE * (z_rand - 0.5);
+
+    if (light_col.r == 0.0 && light_col.g == 0.0 && light_col.b == 0.0) {
+      light_col = colour_phase(z_rand);
+    }
+
     /* Normalised vector pointing at the light source. */
-    l = sc->lights[i].loc;
+    l = light_loc;
     SUB(l, w);
     NORMALISE(l);
 
@@ -227,21 +267,21 @@ static void texture(scene const *sc,
     tmp2 = l;
     MULT(tmp2, -1.0);
     double dist;
-    intersect(sc, sc->lights[i].loc, tmp2, &dist, NULL);
+    intersect(sc, light_loc, tmp2, &dist, NULL);
     vector to_l = w;
-    SUB(to_l, sc->lights[i].loc);
+    SUB(to_l, light_loc);
     if (dist*dist + EPSILON < DOT(to_l, to_l)) {
       continue;
     }
 
     /* Diffuse colour */
-    SHADE(c, sc->lights[i].col, surf->diffuse, diffuse);
+    SHADE(c, light_col, surf->diffuse, diffuse);
 
     /* Specular */
     specular = DOT(r, l);
     if (specular >= 0.0) {
       specular = pow(specular, 10);
-      SHADE(c, sc->lights[i].col, surf->specular, specular);
+      SHADE(c, light_col, surf->specular, specular);
     }
   }
 
