@@ -24,6 +24,9 @@ now have:
   original!), in order to demonstrate depth-of-field, and a little
   bit of antialiasing.
 
+* *soft* Demonstrates soft shadows, including a bit of coloured
+  shadows.
+
 (If you want the pretty-much-original version, use the tag
 "original-spheres")
 
@@ -31,6 +34,6 @@ now have:
 
 Compile it with build.sh. For the original, run the produced
 executable "spheres". For the depth-of-field demonstration, run
-"dof". You will need to have libpng installed. A PNG file should
+"dof". etc. You will need to have libpng installed. A PNG file should
 appear in the current directory. You can alter the image produced by
 modifying the source file, recompiling and rerunning. How high tech!
