@@ -16,9 +16,10 @@
 #define HEIGHT 512
 
 static light lights[] = {
- {{10.0, 10.0, 3.0}, {0.0, 0.0, 0.0}},
+  {{10.0, 10.0, 3.0}, {0.0, 0.0, 0.0}, 5.0},
+  {{0.0, 10.0, 5.0}, {0.15, 0.15, 0.15}, 30.0}
 };
-static int num_lights = 1;
+static int num_lights = 2;
 
 static checkerboard checkerboards;
 

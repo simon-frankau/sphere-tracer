@@ -16,7 +16,7 @@
 #define HEIGHT 512
 
 static light lights[] = {
- {{10.0, 10.0, 3.0}, {1.0, 1.0, 1.0}},
+  {{10.0, 10.0, 3.0}, {1.0, 1.0, 1.0}, 0.0},
 };
 static int num_lights = 1;
 

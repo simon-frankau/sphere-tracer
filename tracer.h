@@ -42,6 +42,7 @@ typedef struct {
 typedef struct {
   vector loc;
   colour col;
+  double size;
 } light;
 
 typedef struct {

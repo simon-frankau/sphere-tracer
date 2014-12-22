@@ -207,8 +207,6 @@ static surface *intersect(scene const *sc,
   return NULL;
 }
 
-#define SHADOW_SIZE 2.0
-
 /* Texture a point */
 static void texture(scene const *sc,
                     surface const *surf,
@@ -240,12 +238,18 @@ static void texture(scene const *sc,
   for (i = 0; i < sc->num_lights; i++) {
     vector light_loc = sc->lights[i].loc;
     colour light_col = sc->lights[i].col;
+    double light_size = sc->lights[i].size;
 
     double y_rand = ((double)rand())/RAND_MAX;
     double z_rand = ((double)rand())/RAND_MAX;
 
-    light_loc.y += SHADOW_SIZE * (y_rand - 0.5);
-    light_loc.z += SHADOW_SIZE * (z_rand - 0.5);
+    if (i == 0) {
+      light_loc.y += light_size * (y_rand - 0.5);
+      light_loc.z += light_size * (z_rand - 0.5);
+    } else {
+      light_loc.x += light_size * (y_rand - 0.5);
+      light_loc.z += light_size * (z_rand - 0.5);
+    }
 
     if (light_col.r == 0.0 && light_col.g == 0.0 && light_col.b == 0.0) {
       light_col = colour_phase(z_rand);
