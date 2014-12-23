@@ -380,6 +380,12 @@ void render(scene const *sc, int width, int height, colour *image)
       colour c = { 0.0, 0.0, 0.0 };
       int i = 0;
       for (i = 0; i < sc->num_samples; i++) {
+	double time = (double)rand() / RAND_MAX;
+
+	for (int j = 0; j < sc->num_spheres; ++j) {
+	  sc->spheres[j].center.x -= time;
+	}
+
 	ray.x = x - width/2;
 	ray.y = height/2 - y;
 	ray.z = width/2;
@@ -400,6 +406,10 @@ void render(scene const *sc, int width, int height, colour *image)
 	NORMALISE(ray);
 	colour c2 = trace(sc, origin, ray, white);
 	c.r += c2.r; c.g += c2.g; c.b += c2.b;
+
+	for (int j = 0; j < sc->num_spheres; ++j) {
+	  sc->spheres[j].center.x += time;
+	}
       }
       c.r /= sc->num_samples; c.g /= sc->num_samples; c.b /= sc->num_samples;
       image[y * width + x] = c;
