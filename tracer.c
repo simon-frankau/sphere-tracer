@@ -383,7 +383,7 @@ void render(scene const *sc, int width, int height, colour *image)
 	double time = (double)rand() / RAND_MAX;
 
 	for (int j = 0; j < sc->num_spheres; ++j) {
-	  sc->spheres[j].center.x -= time;
+	  sc->spheres[j].center.z += time;
 	}
 
 	ray.x = x - width/2;
@@ -408,7 +408,7 @@ void render(scene const *sc, int width, int height, colour *image)
 	c.r += c2.r; c.g += c2.g; c.b += c2.b;
 
 	for (int j = 0; j < sc->num_spheres; ++j) {
-	  sc->spheres[j].center.x += time;
+	  sc->spheres[j].center.z -= time;
 	}
       }
       c.r /= sc->num_samples; c.g /= sc->num_samples; c.b /= sc->num_samples;
