@@ -4,6 +4,7 @@
  * (C) Copyright Simon Frankau 1999-2014
  */
 
+#include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,6 +38,21 @@ static void set_surface(surface *s, double r, double g, double b, double shine)
     = s->reflective.g
     = s->reflective.b
     = shine;
+}
+
+static void do_motion_blur(scene *sc)
+{
+  assert(sc->num_spheres == 5);
+
+  double time = (double)rand() / RAND_MAX;
+
+  /* Constants duplicated from make_scene. Ick. */
+  double z = 3.0;
+
+  for (int i = 0; i < sc->num_spheres; ++i) {
+    sc->spheres[i].center.z = z + time;
+    z += 2.0;
+  }
 }
 
 static scene *make_scene()
@@ -84,7 +100,7 @@ static scene *make_scene()
  result->blur_size      = 0.0;
  result->antialias_size = 0.5;
  result->focal_depth    = 5.0;
- result->callback       = NULL;
+ result->callback       = do_motion_blur;
 
  return result;
 }

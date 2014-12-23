@@ -389,12 +389,6 @@ void render(scene *sc, int width, int height, colour *image)
 	  sc->callback(sc);
 	}
 
-	double time = (double)rand() / RAND_MAX;
-
-	for (int j = 0; j < sc->num_spheres; ++j) {
-	  sc->spheres[j].center.z += time;
-	}
-
 	ray.x = x - width/2;
 	ray.y = height/2 - y;
 	ray.z = width/2;
@@ -415,10 +409,6 @@ void render(scene *sc, int width, int height, colour *image)
 	NORMALISE(ray);
 	colour c2 = trace(sc, origin, ray, white);
 	c.r += c2.r; c.g += c2.g; c.b += c2.b;
-
-	for (int j = 0; j < sc->num_spheres; ++j) {
-	  sc->spheres[j].center.z -= time;
-	}
       }
       c.r /= sc->num_samples; c.g /= sc->num_samples; c.b /= sc->num_samples;
       image[y * width + x] = c;
