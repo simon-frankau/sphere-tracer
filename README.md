@@ -32,6 +32,13 @@ now have:
   horizontal and vertical elements. To be honest, I'm a bit
   underwhelmed by this one.
 
+* *moblur* Demonstrates motion blur. It's like 'dof', only with the
+  balls moving away from/towards the viewer. I also turned off the
+  depth-of-field effect in order to make sure the blurriness
+  basically comes from the motion. I don't think the effect is
+  super-impressive, but it's kind of nice. I prefer it to the fuzzy
+  reflections.
+
 (If you want the pretty-much-original version, use the tag
 "original-spheres")
 
