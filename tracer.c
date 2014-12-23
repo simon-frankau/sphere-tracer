@@ -120,11 +120,45 @@ static double sphere_intersect(sphere const *sp, vector from, vector dir)
   return INFINITY;
 }
 
+/* Creates a random vector within the unit sphere */
+static vector random_vector()
+{
+  vector v;
+  do {
+    v.x = 2.0 * ((double)rand() / RAND_MAX) - 1.0;
+    v.y = 2.0 * ((double)rand() / RAND_MAX) - 1.0;
+    v.z = 2.0 * ((double)rand() / RAND_MAX) - 1.0;
+  } while (DOT(v, v) > 1);
+  return v;
+}
+
 static vector sphere_normal(sphere const *sp, vector w)
 {
   vector n = w;
   SUB(n, sp->center);
   NORMALISE(n);
+
+  if (sp->fuzz_size > 0.0 && sp->fuzz_style != none) {
+    vector r = random_vector();
+    switch (sp->fuzz_style) {
+    case horizontal:
+      r.y = 0.0;
+      break;
+    case vertical:
+      r.x = r.z = 0.0;
+      break;
+    case both:
+      /* Already ok */
+      break;
+    case none:
+      puts("Shouldn't happen!\n");
+      exit(1);
+      break;
+    }
+    MULT(r, sp->fuzz_size);
+    ADD(n, r);
+    NORMALISE(n);
+  }
   return n;
 }
 

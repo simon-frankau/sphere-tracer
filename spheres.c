@@ -97,6 +97,9 @@ static scene *make_scene(double min, double max, int count)
  
    set_surface(&(spheres[i].props));
 
+   spheres[i].fuzz_size = 0.0;
+   spheres[i].fuzz_style = none;
+
    printf("%d\n", i+1);
  }
 

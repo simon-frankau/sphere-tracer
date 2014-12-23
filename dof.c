@@ -65,6 +65,9 @@ static scene *make_scene()
     colour c = colour_phase((double)i / num_spheres);
     set_surface(&spheres[i].props, c.r, c.g, c.b, 0.5);
 
+    spheres[i].fuzz_size = 0.0;
+    spheres[i].fuzz_style = none;
+
     pos.x += 2.5;
     pos.z += 2.0;
   }

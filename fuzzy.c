@@ -1,5 +1,5 @@
 /*
- * soft.c: Soft shadow demo
+ * fuzzy.c: Blurry reflections demo
  *
  * (C) Copyright Simon Frankau 1999-2014
  */
@@ -12,16 +12,16 @@
 #include "tracer.h"
 #include "png_render.h"
 
-#define WIDTH 512
-#define HEIGHT 512
+#define WIDTH 256
+#define HEIGHT 256
 
 static light lights[] = {
-  {{10.0, 7.5, 0.5}, {0.0, 0.0, 0.0},
-   {0.0, 0.0, 5.0}, {0.0, 5.0, 0.0}},
+  {{10.0, 7.5, 0.5}, {1.0, 1.0, 1.0},
+   {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}},
   {{-15.0, 10.0, -10.0}, {0.15, 0.15, 0.15},
-   {0.0, 0.0, 30.0}, {30.0, 0.0, 0.0}}
+   {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}}
 };
-static int num_lights = 2;
+static int num_lights = 1;
 
 static checkerboard checkerboards;
 
@@ -43,7 +43,7 @@ static void set_surface(surface *s, double r, double g, double b, double shine)
 }
 
 /* Make a spherical shell filled with spheres. */
-static scene *make_scene()
+static scene *make_scene(double fuzz_size, fuzz_mode style)
 {
   /* Place the checkerboard */
   checkerboards.normal.x = 0.0;
@@ -65,8 +65,8 @@ static scene *make_scene()
 
   set_surface(&(spheres->props), 0.7, 0.7, 0.7, 0.5);
 
-  spheres->fuzz_size = 0.0;
-  spheres->fuzz_style = none;
+  spheres->fuzz_size = fuzz_size;
+  spheres->fuzz_style = style;
 
   scene *result = (scene *)malloc(sizeof(scene));
   result->spheres = spheres;
@@ -85,7 +85,13 @@ static scene *make_scene()
 }
 
 int main(void) {
-  scene *sc = make_scene();
-  png_render(sc, WIDTH, HEIGHT, "soft.png");
+  scene scenes[5];
+  scenes[0] = *make_scene(0.00, none);
+  scenes[1] = *make_scene(0.05, both);
+  scenes[2] = *make_scene(0.15, both);
+  scenes[3] = *make_scene(0.15, horizontal);
+  scenes[4] = *make_scene(0.15, vertical);
+  png_render_ex(scenes, sizeof(scenes)/sizeof(scenes[0]), 3,
+		WIDTH, HEIGHT, "fuzzy.png");
   return 0;
 }

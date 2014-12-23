@@ -25,10 +25,19 @@ typedef struct {
   colour reflective;
 } surface;
 
+typedef enum {
+  none,
+  horizontal,
+  vertical,
+  both
+} fuzz_mode;
+
 typedef struct {
   surface props;
   vector center;
   double radius;
+  double fuzz_size;
+  fuzz_mode fuzz_style;
 } sphere;
 
 /* Quite specialist and hacky! */
