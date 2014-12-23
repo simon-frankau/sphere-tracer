@@ -80,6 +80,7 @@ static scene *make_scene(double fuzz_size, fuzz_mode style)
   result->blur_size      = 0.0;
   result->antialias_size = 0.5;
   result->focal_depth    = 0.0;
+  result->callback       = NULL;
 
   return result;
 }

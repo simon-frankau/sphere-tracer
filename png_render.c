@@ -93,7 +93,7 @@ static void write_image(int width, int height, png_bytep image,
  printf("Saved file %s!\n", filename);
 }
 
-void png_render(scene const *sc, int width, int height, char const *file)
+void png_render(scene *sc, int width, int height, char const *file)
 {
  colour *image = (colour *)malloc(width*height*sizeof(colour));
  png_bytep image2 = (png_bytep)malloc(width*height*3);
@@ -103,7 +103,7 @@ void png_render(scene const *sc, int width, int height, char const *file)
 }
 
 /* Render a set of scenes into a big image. */
-void png_render_ex(scene const *sc, int num_scenes, int tiles_across,
+void png_render_ex(scene *sc, int num_scenes, int tiles_across,
 		   int width, int height, char const *file)
 {
   int tiles_down = (num_scenes - 1) / tiles_across + 1;

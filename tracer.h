@@ -55,7 +55,11 @@ typedef struct {
   vector area2;
 } light;
 
-typedef struct {
+struct scene_t;
+
+typedef void (* scene_callback)(struct scene_t *);
+
+typedef struct scene_t {
   sphere *spheres;
   int num_spheres;
   checkerboard *checkerboards;
@@ -66,6 +70,7 @@ typedef struct {
   double blur_size;
   double antialias_size;
   double focal_depth;
+  scene_callback callback;
 } scene;
 
 /* ------------------------------------------------------------------
@@ -91,6 +96,6 @@ typedef struct {
 colour colour_phase(double x);
 
 /* Render a picture */
-void render(scene const *scene_in, int width, int height, colour *image);
+void render(scene *scene_in, int width, int height, colour *image);
 
 #endif // TRACER_H_INCLUDED

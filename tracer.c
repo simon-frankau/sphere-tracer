@@ -361,7 +361,7 @@ static vector noise_xy(double std_var) {
 }
 
 /* Render a picture */
-void render(scene const *sc, int width, int height, colour *image)
+void render(scene *sc, int width, int height, colour *image)
 {
   /* Make sure the noise we apply is reproduceable. */
   srand(42);
@@ -380,6 +380,15 @@ void render(scene const *sc, int width, int height, colour *image)
       colour c = { 0.0, 0.0, 0.0 };
       int i = 0;
       for (i = 0; i < sc->num_samples; i++) {
+	if (sc->callback != NULL) {
+	  /* Perform callback allowing the scene to be updated for e.g.
+	   * motion blur. Downside is that the scene is no longer 'const'
+	   * and we can't share the structure if we ever wanted to
+	   * parallelise.
+	   */
+	  sc->callback(sc);
+	}
+
 	double time = (double)rand() / RAND_MAX;
 
 	for (int j = 0; j < sc->num_spheres; ++j) {

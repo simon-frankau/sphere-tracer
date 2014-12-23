@@ -84,7 +84,7 @@ static scene *make_scene()
  result->blur_size      = 0.0;
  result->antialias_size = 0.5;
  result->focal_depth    = 5.0;
-
+ result->callback       = NULL;
 
  return result;
 }
