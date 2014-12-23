@@ -4,14 +4,15 @@
  * (C) Copyright Simon Frankau 1999-2014
  */
 
-#include <stdlib.h>
 #include <png.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "tracer.h"
 
 /* Convert a colour array into an image suitable for saving. */
 static void convert_image(int width, int height, colour const *im_in,
-                          png_bytep im_out)
+                          int dest_width, png_bytep im_out)
 {
  int x, y;
  int r, g, b;
@@ -27,19 +28,19 @@ static void convert_image(int width, int height, colour const *im_in,
         max = im_in[y*width+x].b;
    }
 
- max /= 256;
+ max /= 256.0;
 
  for (x = 0; x < width; x++)
    for (y = 0; y < height; y++) {
      /* Red: */
      r = im_in[y*width + x].r /max;
-     im_out[y*width*3 + x*3 + 0] = (r > 255) ? 255 : r;
+     im_out[y*dest_width*3 + x*3 + 0] = (r > 255) ? 255 : r;
      /* Green: */
      g = im_in[y*width + x].g / max;
-     im_out[y*width*3 + x*3 + 1] = (g > 255) ? 255 : g;
+     im_out[y*dest_width*3 + x*3 + 1] = (g > 255) ? 255 : g;
      /* Blue: */
      b = im_in[y*width + x].b / max;
-     im_out[y*width*3 + x*3 + 2] = (b > 255) ? 255 : b;
+     im_out[y*dest_width*3 + x*3 + 2] = (b > 255) ? 255 : b;
    }
 }
 
@@ -97,6 +98,30 @@ void png_render(scene const *sc, int width, int height, char const *file)
  colour *image = (colour *)malloc(width*height*sizeof(colour));
  png_bytep image2 = (png_bytep)malloc(width*height*3);
  render(sc, width, height, image);
- convert_image(width, height, image, image2);
+ convert_image(width, height, image, width, image2);
  write_image(width, height, image2, file);
 }
+
+/* Render a set of scenes into a big image. */
+void png_render_ex(scene const *sc, int num_scenes, int tiles_across,
+		   int width, int height, char const *file)
+{
+  int tiles_down = (num_scenes - 1) / tiles_across + 1;
+  colour *image = (colour *)malloc(width*height*sizeof(colour));
+  int dest_size = width*height*tiles_across*tiles_down*3;
+  png_bytep image2 = (png_bytep)malloc(dest_size);
+  memset(image2, 0, dest_size);
+
+  int i;
+  for (i = 0; i < num_scenes; i++) {
+    int tx = i % tiles_across;
+    int ty = i / tiles_across;
+    render(sc + i, width, height, image);
+    convert_image(width, height, image,
+		  width * tiles_across,
+		  image2 + 3 * (ty * height * width * tiles_across
+				+ tx * width));
+  }
+  write_image(width * tiles_across, height * tiles_down, image2, file);
+}
+

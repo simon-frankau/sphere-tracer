@@ -11,4 +11,7 @@
 
 void png_render(scene const *sc, int width, int height, char const *file);
 
+void png_render_ex(scene const *sc, int num_scenes, int tiles_across,
+		   int width, int height, char const *file);
+
 #endif // PNG_RENDER_H_INCLUDED
