@@ -4,6 +4,7 @@
  * (C) Copyright Simon Frankau 1999-2014
  */
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -171,8 +172,29 @@ static vector sphere_normal(sphere const *sp, vector w)
 static void sphere_transmit(sphere const *sp, vector w, vector dir,
 			    vector *trans_w, vector *trans_dir)
 {
+  /* Vector to centre of sphere */
+  vector to_centre = sp->center;
+  SUB(to_centre, w);
+
+  /* Calculate distance to pass through. */
+  double dist = 2.0 * DOT(to_centre, dir);
+
+  /* And create a vector that passes through. */
+  vector through = dir;
+  MULT(through, dist);
+
+  /* And now we have the position on the other side */
+  vector other_side = w;
+  ADD(other_side, through);
+
+#ifdef DEBUG
+  vector dist = other_side;
+  SUB(dist, sp->center);
+  assert((DOT(dist, dist) - sp->radius * sp->radius) < 1e-7);
+#endif /* DEBUG */
+
   if (trans_w) {
-    *trans_w = w;
+    *trans_w = other_side;
   }
   if (trans_dir) {
     *trans_dir = dir;
