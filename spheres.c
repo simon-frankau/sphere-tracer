@@ -47,6 +47,11 @@ static void set_surface(surface *s)
      = s->reflective.g
      = s->reflective.b
      = 0.5;
+
+   s->transparency.r
+     = s->transparency.g
+     = s->transparency.b
+     = 0.0;
 }
 
 /* Make a spherical shell filled with spheres. */

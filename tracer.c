@@ -364,10 +364,17 @@ static void texture(scene const *sc,
   col->g += c.g;
   col->b += c.b;
 
-  colour trans = trace(sc, trans_w, trans_dir, in);
-  col->r += trans.r * 0.9;
-  col->g += trans.g * 0.9;
-  col->b += trans.b * 0.9;
+  /* Transparency */
+  in.r *= surf->transparency.r;
+  in.g *= surf->transparency.g;
+  in.b *= surf->transparency.b;
+
+  if (in.r + in.g + in.b > REFLECTSTOP) {
+    colour trans = trace(sc, trans_w, trans_dir, in);
+    col->r += trans.r;
+    col->g += trans.g;
+    col->b += trans.b;
+  }
 }
 
 /* Create a normally distributed lump of noise in the X-Z plane */
