@@ -168,6 +168,17 @@ static vector sphere_normal(sphere const *sp, vector w)
   return n;
 }
 
+static void sphere_transmit(sphere const *sp, vector w, vector dir,
+			    vector *trans_w, vector *trans_dir)
+{
+  if (trans_w) {
+    *trans_w = w;
+  }
+  if (trans_dir) {
+    *trans_dir = dir;
+  }
+}
+
 static double plane_intersect(checkerboard const *pl, vector from, vector dir)
 {
   double from_norm = DOT(from, pl->normal) - pl->distance;
@@ -184,6 +195,17 @@ static double plane_intersect(checkerboard const *pl, vector from, vector dir)
 static vector plane_normal(checkerboard const *pl, vector w)
 {
   return pl->normal;
+}
+
+static void plane_transmit(checkerboard const *pl, vector w, vector dir,
+			   vector *trans_w, vector *trans_dir)
+{
+  if (trans_w) {
+    *trans_w = w;
+  }
+  if (trans_dir) {
+    *trans_dir = dir;
+  }
 }
 
 /* Trace a unit ray, to find an intersection */
@@ -225,15 +247,8 @@ static surface *intersect(scene const *sc,
     *dist = nearest_dist;
   }
 
-  if (trans_w) {
-    *trans_w = w;
-  }
-
-  if (trans_dir) {
-    *trans_dir = direction;
-  }
-
   if (nearest_sphere != NULL) {
+    sphere_transmit(nearest_sphere, w, direction, trans_w, trans_dir);
     if (normal != NULL) {
       *normal = sphere_normal(nearest_sphere, w);
     }
@@ -241,6 +256,7 @@ static surface *intersect(scene const *sc,
   }
 
   if (nearest_checkerboard != NULL) {
+    plane_transmit(nearest_checkerboard, w, direction, trans_w, trans_dir);
     if (normal != NULL) {
       *normal = plane_normal(nearest_checkerboard, w);
     }
