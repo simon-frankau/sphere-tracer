@@ -45,11 +45,14 @@ colour black = {0.0, 0.0, 0.0};
 
 /* Trace a unit ray, to find an intersection */
 static surface *intersect(scene const *sc, vector from, vector direction,
-                          double *dist, vector *normal);
+                          double *dist, vector *normal,
+			  vector *trans_w, vector *trans_dir);
 
 /* Texture a point */
 static void texture(scene const *sc, surface const *surf,
-                    vector w, vector n, vector dir, colour *colour);
+                    vector w, vector n, vector dir,
+		    vector trans_w, vector trans_dir,
+		    colour *colour);
 
 /* ------------------------------------------------------------
  * Functions.
@@ -88,7 +91,10 @@ static colour trace(scene const *sc, vector from, vector dir, colour premul)
 {
   double dist;
   vector normal;
-  surface *intersecting = intersect(sc, from, dir, &dist, &normal);
+  vector trans_w;
+  vector trans_dir;
+  surface *intersecting = intersect(sc, from, dir, &dist, &normal,
+				    &trans_w, &trans_dir);
   if (!intersecting) {
     /* Missed! Send ray off to darkest infinity */
     return black;
@@ -99,7 +105,7 @@ static colour trace(scene const *sc, vector from, vector dir, colour premul)
     ADD(w, from);
 
     colour result = premul;
-    texture(sc, intersecting, w, normal, dir, &result);
+    texture(sc, intersecting, w, normal, dir, trans_w, trans_dir, &result);
     return result;
   }
 }
@@ -185,7 +191,9 @@ static surface *intersect(scene const *sc,
                           vector from,
                           vector direction,
                           double *dist,
-			  vector *normal)
+			  vector *normal,
+			  vector *trans_w,
+			  vector *trans_dir)
 {
   double nearest_dist = INFINITY;
   sphere *nearest_sphere = NULL;
@@ -215,6 +223,14 @@ static surface *intersect(scene const *sc,
 
   if (dist) {
     *dist = nearest_dist;
+  }
+
+  if (trans_w) {
+    *trans_w = w;
+  }
+
+  if (trans_dir) {
+    *trans_dir = direction;
   }
 
   if (nearest_sphere != NULL) {
@@ -247,6 +263,9 @@ static void texture(scene const *sc,
                     vector w, /* Point of intersection */
                     vector n, /* Surface normal */
                     vector dir,
+		    vector trans_w, /* Place where we leave the surface
+				       after taking into account refraction */
+		    vector trans_dir, /* Direction after transmission */
                     colour *col)
 {
   /* Texture by the nearest thing we hit. */
@@ -303,7 +322,7 @@ static void texture(scene const *sc,
     tmp2 = l;
     MULT(tmp2, -1.0);
     double dist;
-    intersect(sc, light_loc, tmp2, &dist, NULL);
+    intersect(sc, light_loc, tmp2, &dist, NULL, NULL, NULL);
     vector to_l = w;
     SUB(to_l, light_loc);
     if (dist*dist + EPSILON < DOT(to_l, to_l)) {
@@ -326,6 +345,8 @@ static void texture(scene const *sc,
   c.g *= col->g;
   c.b *= col->b;
 
+  colour in = *col;
+
   col->r *= surf->reflective.r;
   col->g *= surf->reflective.g;
   col->b *= surf->reflective.b;
@@ -342,6 +363,11 @@ static void texture(scene const *sc,
   col->r += c.r;
   col->g += c.g;
   col->b += c.b;
+
+  colour trans = trace(sc, trans_w, trans_dir, in);
+  col->r += trans.r * 0.9;
+  col->g += trans.g * 0.9;
+  col->b += trans.b * 0.9;
 }
 
 /* Create a normally distributed lump of noise in the X-Z plane */

@@ -37,7 +37,7 @@ static void set_surface(surface *s, double r, double g, double b, double shine)
   s->reflective.r
     = s->reflective.g
     = s->reflective.b
-    = shine;
+    = 0.0; /* shine; */
 }
 
 static scene *make_scene()
