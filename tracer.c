@@ -295,6 +295,40 @@ static surface *intersect(scene const *sc,
   return NULL;
 }
 
+/* Perform refraction */
+/* NB: 'normal' should be pointing in the direction we pass through the
+ * material.
+ */
+static vector refract(vector dir, vector normal, double index)
+{
+  /* Assumes vectors are normalised */
+  double normal_component = DOT(dir, normal);
+
+  vector perp_component = normal;
+  MULT(perp_component, -normal_component);
+  ADD(perp_component, dir);
+
+  double sin_in = sqrt(DOT(perp_component, perp_component));
+  double sin_out = index * sin_in;
+
+  if (sin_out >= 1) {
+    return dir; /* TODO! */
+  } else if (sin_out < EPSILON) {
+    /* Perpendicular component is negligible, pass straight through. */
+    return dir;
+  }
+
+  double cos_out = sqrt(1.0 - sin_out * sin_out);
+  double tan_out = sin_out / cos_out;
+
+  vector result = perp_component;
+  NORMALISE(result);
+  MULT(result, tan_out);
+  ADD(result, normal);
+  NORMALISE(result);
+  return result;
+}
+
 /* Texture a point */
 static void texture(scene const *sc,
                     surface const *surf,
