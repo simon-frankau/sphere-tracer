@@ -169,12 +169,56 @@ static vector sphere_normal(sphere const *sp, vector w)
   return n;
 }
 
+/* #define REFRACTIVE_INDEX 0.6667 */
+#define REFRACTIVE_INDEX 0.9
+
+
+/* Perform refraction */
+/* NB: 'normal' should be pointing in the direction we pass through the
+ * material.
+ */
+static vector refract(vector dir, vector normal, double index)
+{
+  /* Assumes vectors are normalised */
+  double normal_component = DOT(dir, normal);
+
+  vector perp_component = normal;
+  MULT(perp_component, -normal_component);
+  ADD(perp_component, dir);
+
+  double sin_in = sqrt(DOT(perp_component, perp_component));
+  double sin_out = index * sin_in;
+
+  if (sin_out >= 1) {
+    assert(0);
+    return dir; /* TODO! */
+  } else if (sin_out < EPSILON) {
+    /* Perpendicular component is negligible, pass straight through. */
+    return dir;
+  }
+
+  double cos_out = sqrt(1.0 - sin_out * sin_out);
+  double tan_out = sin_out / cos_out;
+
+  vector result = perp_component;
+  NORMALISE(result);
+  MULT(result, tan_out);
+  ADD(result, normal);
+  NORMALISE(result);
+  return result;
+}
+
 static void sphere_transmit(sphere const *sp, vector w, vector dir,
 			    vector *trans_w, vector *trans_dir)
 {
   /* Vector to centre of sphere */
   vector to_centre = sp->center;
   SUB(to_centre, w);
+
+  /* Make into normal vector, and use to refract. */
+  vector normal = to_centre;
+  NORMALISE(normal);
+  dir = refract(dir, normal, REFRACTIVE_INDEX);
 
   /* Calculate distance to pass through. */
   double dist = 2.0 * DOT(to_centre, dir);
@@ -293,40 +337,6 @@ static surface *intersect(scene const *sc,
   }
 
   return NULL;
-}
-
-/* Perform refraction */
-/* NB: 'normal' should be pointing in the direction we pass through the
- * material.
- */
-static vector refract(vector dir, vector normal, double index)
-{
-  /* Assumes vectors are normalised */
-  double normal_component = DOT(dir, normal);
-
-  vector perp_component = normal;
-  MULT(perp_component, -normal_component);
-  ADD(perp_component, dir);
-
-  double sin_in = sqrt(DOT(perp_component, perp_component));
-  double sin_out = index * sin_in;
-
-  if (sin_out >= 1) {
-    return dir; /* TODO! */
-  } else if (sin_out < EPSILON) {
-    /* Perpendicular component is negligible, pass straight through. */
-    return dir;
-  }
-
-  double cos_out = sqrt(1.0 - sin_out * sin_out);
-  double tan_out = sin_out / cos_out;
-
-  vector result = perp_component;
-  NORMALISE(result);
-  MULT(result, tan_out);
-  ADD(result, normal);
-  NORMALISE(result);
-  return result;
 }
 
 /* Texture a point */
