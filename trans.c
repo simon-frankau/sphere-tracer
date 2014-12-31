@@ -58,8 +58,8 @@ static scene *make_scene()
   sphere *spheres = (sphere *)malloc(num_spheres * sizeof(sphere));
 
   int i;
-  vector pos = { -2.5, -0.5, 3.0 };
-  double radius = pos.y - checkerboards.distance;
+  vector pos = { -2.5, 0.0, 3.0 };
+  double radius = 1.5;
 
   for (i = 0; i < num_spheres; i++) {
     spheres[i].center = pos;

@@ -170,7 +170,7 @@ static vector sphere_normal(sphere const *sp, vector w)
 }
 
 /* #define REFRACTIVE_INDEX 0.6667 */
-#define REFRACTIVE_INDEX 0.9
+#define REFRACTIVE_INDEX 0.6
 
 
 /* Perform refraction */
@@ -230,6 +230,13 @@ static void sphere_transmit(sphere const *sp, vector w, vector dir,
   /* And now we have the position on the other side */
   vector other_side = w;
   ADD(other_side, through);
+
+  /* Refract on exit. */
+  normal = sp->center;
+  SUB(normal, other_side);
+  NORMALISE(normal);
+  MULT(normal, -1.0);
+  dir = refract(dir, normal, 1.0 / REFRACTIVE_INDEX);
 
 #ifdef DEBUG
   vector dist = other_side;
