@@ -43,6 +43,8 @@ static void set_surface(surface *s, double r, double g, double b, double shine)
     = s->transparency.g
     = s->transparency.b
     = 0.0;
+
+  s->refractive_index = 1.0;
 }
 
 static void do_motion_blur(scene *sc)

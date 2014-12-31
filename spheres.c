@@ -52,6 +52,8 @@ static void set_surface(surface *s)
      = s->transparency.g
      = s->transparency.b
      = 0.0;
+
+   s->refractive_index = 1.0;
 }
 
 /* Make a spherical shell filled with spheres. */

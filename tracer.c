@@ -169,10 +169,6 @@ static vector sphere_normal(sphere const *sp, vector w)
   return n;
 }
 
-/* #define REFRACTIVE_INDEX 0.6667 */
-#define REFRACTIVE_INDEX 0.6
-
-
 /* Perform refraction */
 /* NB: 'normal' should be pointing in the direction we pass through the
  * material.
@@ -211,6 +207,8 @@ static vector refract(vector dir, vector normal, double index)
 static void sphere_transmit(sphere const *sp, vector w, vector dir,
 			    vector *trans_w, vector *trans_dir)
 {
+  double refractive_index = sp->props.refractive_index;
+
   /* Vector to centre of sphere */
   vector to_centre = sp->center;
   SUB(to_centre, w);
@@ -218,7 +216,7 @@ static void sphere_transmit(sphere const *sp, vector w, vector dir,
   /* Make into normal vector, and use to refract. */
   vector normal = to_centre;
   NORMALISE(normal);
-  dir = refract(dir, normal, REFRACTIVE_INDEX);
+  dir = refract(dir, normal, refractive_index);
 
   /* Calculate distance to pass through. */
   double dist = 2.0 * DOT(to_centre, dir);
@@ -236,7 +234,7 @@ static void sphere_transmit(sphere const *sp, vector w, vector dir,
   SUB(normal, other_side);
   NORMALISE(normal);
   MULT(normal, -1.0);
-  dir = refract(dir, normal, 1.0 / REFRACTIVE_INDEX);
+  dir = refract(dir, normal, 1.0 / refractive_index);
 
 #ifdef DEBUG
   vector dist = other_side;

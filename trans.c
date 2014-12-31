@@ -40,6 +40,8 @@ static void set_surface(surface *s, double r, double g, double b, double shine)
     = 0.0; /* shine; */
 
   s->transparency = s->diffuse;
+
+  s->refractive_index = 0.6;
 }
 
 static scene *make_scene()

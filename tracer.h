@@ -24,6 +24,7 @@ typedef struct {
   colour specular;
   colour reflective;
   colour transparency;
+  double refractive_index;
 } surface;
 
 typedef enum {
