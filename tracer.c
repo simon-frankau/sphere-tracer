@@ -358,29 +358,42 @@ static surface *intersect(scene const *sc,
   return NULL;
 }
 
-int check_visibility(scene const *sc,
-		     vector n, vector l, vector w, vector light_loc)
+static colour check_visibility(scene const *sc,
+			       vector n, vector l, vector w, vector light_loc)
 {
+  colour c = white;
+
   /* Dot product of the normal and vector to the light.
-   * Used to calculate the amount of diffuse light received.
    * If negative, we are facing away from the light (no light).
    */
   double diffuse = DOT(n, l);
   if (diffuse <= 0.0)
-    return 0;
+    return black;
 
   /* Light is on right side - check we can see it. */
-  vector tmp2 = l;
-  MULT(tmp2, -1.0);
-  double dist;
-  intersect(sc, light_loc, tmp2, &dist, NULL, NULL, NULL, NULL);
+
   vector to_l = w;
   SUB(to_l, light_loc);
-  if (dist*dist + EPSILON < DOT(to_l, to_l)) {
-    return 0;
-  }
+  double dist_to_light = sqrt(DOT(to_l, to_l));
 
-  return 1;
+  do {
+    double dist;
+    surface *s = intersect(sc, w, l, &dist, NULL, NULL, NULL, NULL);
+    if (dist_to_light > dist) {
+      if (IS_BLACK(s->transparency)) {
+	return black;
+      }
+      c.r *= s->transparency.r;
+      c.g *= s->transparency.g;
+      c.b *= s->transparency.b;
+    }
+    dist_to_light -= dist;
+    vector moved = l;
+    MULT(moved, dist);
+    ADD(w, moved);
+  } while (dist_to_light > EPSILON);
+
+  return c;
 }
 
 /* Texture a point */
@@ -429,7 +442,7 @@ static void texture(scene const *sc,
     ADD(light_loc, lr1);
     ADD(light_loc, lr2);
 
-    if (light_col.r == 0.0 && light_col.g == 0.0 && light_col.b == 0.0) {
+    if (IS_BLACK(light_col)) {
       light_col = colour_phase(z_rand);
     }
 
@@ -438,9 +451,14 @@ static void texture(scene const *sc,
     SUB(l, w);
     NORMALISE(l);
 
-    if (!check_visibility(sc, n, l, w, light_loc)) {
+    colour transmitted = check_visibility(sc, n, l, w, light_loc);
+    if (IS_BLACK(transmitted)) {
       continue;
     }
+
+    light_col.r *= transmitted.r;
+    light_col.g *= transmitted.g;
+    light_col.b *= transmitted.b;
 
     /* Diffuse colour */
     double diffuse = DOT(n, l);

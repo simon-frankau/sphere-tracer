@@ -90,6 +90,8 @@ typedef struct scene_t {
 
 #define MULT(v, m) {v.x *= m; v.y *= m; v.z *= m;}
 
+#define IS_BLACK(c) ((c).r < EPSILON && (c).g < EPSILON && (c).b < EPSILON)
+
 /* ------------------------------------------------------------------
  * Exported functions
  */
