@@ -358,6 +358,14 @@ static surface *intersect(scene const *sc,
   return NULL;
 }
 
+static colour apply_transparency(surface const *surf, colour in, double dist)
+{
+  in.r *= pow(surf->transparency.r, dist);
+  in.g *= pow(surf->transparency.g, dist);
+  in.b *= pow(surf->transparency.b, dist);
+  return in;
+}
+
 static colour check_visibility(scene const *sc,
 			       vector n, vector l, vector w, vector light_loc)
 {
@@ -378,14 +386,13 @@ static colour check_visibility(scene const *sc,
 
   do {
     double dist;
-    surface *s = intersect(sc, w, l, &dist, NULL, NULL, NULL, NULL);
+    double trans_dist;
+    surface *s = intersect(sc, w, l, &dist, NULL, NULL, NULL, &trans_dist);
     if (dist_to_light > dist) {
       if (IS_BLACK(s->transparency)) {
 	return black;
       }
-      c.r *= s->transparency.r;
-      c.g *= s->transparency.g;
-      c.b *= s->transparency.b;
+      c = apply_transparency(s, c, trans_dist);
     }
     dist_to_light -= dist;
     vector moved = l;
@@ -497,10 +504,7 @@ static void texture(scene const *sc,
   col->b += c.b;
 
   /* Transparency */
-  in.r *= pow(surf->transparency.r, trans_dist);
-  in.g *= pow(surf->transparency.g, trans_dist);
-  in.b *= pow(surf->transparency.b, trans_dist);
-
+  in = apply_transparency(surf, in, trans_dist);
   if (in.r + in.g + in.b > REFLECTSTOP) {
     colour trans = trace(sc, trans_w, trans_dir, in);
     col->r += trans.r;
