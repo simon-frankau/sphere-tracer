@@ -358,6 +358,31 @@ static surface *intersect(scene const *sc,
   return NULL;
 }
 
+int check_visibility(scene const *sc,
+		     vector n, vector l, vector w, vector light_loc)
+{
+  /* Dot product of the normal and vector to the light.
+   * Used to calculate the amount of diffuse light received.
+   * If negative, we are facing away from the light (no light).
+   */
+  double diffuse = DOT(n, l);
+  if (diffuse <= 0.0)
+    return 0;
+
+  /* Light is on right side - check we can see it. */
+  vector tmp2 = l;
+  MULT(tmp2, -1.0);
+  double dist;
+  intersect(sc, light_loc, tmp2, &dist, NULL, NULL, NULL, NULL);
+  vector to_l = w;
+  SUB(to_l, light_loc);
+  if (dist*dist + EPSILON < DOT(to_l, to_l)) {
+    return 0;
+  }
+
+  return 1;
+}
+
 /* Texture a point */
 static void texture(scene const *sc,
                     surface const *surf,
@@ -374,7 +399,7 @@ static void texture(scene const *sc,
   vector l, r;
   double tmp;
   vector tmp2;
-  double diffuse, specular;
+  double specular;
   int i;
 
   colour c;
@@ -413,25 +438,12 @@ static void texture(scene const *sc,
     SUB(l, w);
     NORMALISE(l);
 
-    /* Dot product of the normal and vector to the light.
-     * Used to calculate the amount of diffuse light received.
-     * If negative, we are facing away from the light (no light).
-     */
-    if ((diffuse = DOT(n, l)) <= 0.0)
-      continue;
-
-    /* Light is on right side - check we can see it. */
-    tmp2 = l;
-    MULT(tmp2, -1.0);
-    double dist;
-    intersect(sc, light_loc, tmp2, &dist, NULL, NULL, NULL, NULL);
-    vector to_l = w;
-    SUB(to_l, light_loc);
-    if (dist*dist + EPSILON < DOT(to_l, to_l)) {
+    if (!check_visibility(sc, n, l, w, light_loc)) {
       continue;
     }
 
     /* Diffuse colour */
+    double diffuse = DOT(n, l);
     SHADE(c, light_col, surf->diffuse, diffuse);
 
     /* Specular */
