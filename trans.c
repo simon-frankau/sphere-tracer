@@ -25,9 +25,9 @@ static checkerboard checkerboards;
 
 static void set_surface(surface *s, double r, double g, double b, double shine)
 {
-  s->diffuse.r = r;
-  s->diffuse.g = g;
-  s->diffuse.b = b;
+  s->diffuse.r = r * 0.1;
+  s->diffuse.g = g * 0.1;
+  s->diffuse.b = b * 0.1;
 
   s->specular.r
     = s->specular.g
@@ -39,7 +39,9 @@ static void set_surface(surface *s, double r, double g, double b, double shine)
     = s->reflective.b
     = 0.0; /* shine; */
 
-  s->transparency = s->diffuse;
+  s->transparency.r = r;
+  s->transparency.g = g;
+  s->transparency.b = b;
 
   s->refractive_index = 0.6;
 }
@@ -68,7 +70,7 @@ static scene *make_scene()
     spheres[i].radius = radius;
 
     colour c = colour_phase((double)i / num_spheres);
-    set_surface(&spheres[i].props, c.r, c.g, c.b, 0.5);
+    set_surface(&spheres[i].props, c.r, c.g, c.b, 0.2);
 
     spheres[i].fuzz_size = 0.0;
     spheres[i].fuzz_style = none;

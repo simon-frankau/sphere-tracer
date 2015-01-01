@@ -47,12 +47,13 @@ colour black = {0.0, 0.0, 0.0};
 /* Trace a unit ray, to find an intersection */
 static surface *intersect(scene const *sc, vector from, vector direction,
                           double *dist, vector *normal,
-			  vector *trans_w, vector *trans_dir);
+			  vector *trans_w, vector *trans_dir,
+			  double *trans_dist);
 
 /* Texture a point */
 static void texture(scene const *sc, surface const *surf,
                     vector w, vector n, vector dir,
-		    vector trans_w, vector trans_dir,
+		    vector trans_w, vector trans_dir, double trans_dist,
 		    colour *colour);
 
 /* ------------------------------------------------------------
@@ -94,8 +95,9 @@ static colour trace(scene const *sc, vector from, vector dir, colour premul)
   vector normal;
   vector trans_w;
   vector trans_dir;
+  double trans_dist;
   surface *intersecting = intersect(sc, from, dir, &dist, &normal,
-				    &trans_w, &trans_dir);
+				    &trans_w, &trans_dir, &trans_dist);
   if (!intersecting) {
     /* Missed! Send ray off to darkest infinity */
     return black;
@@ -106,7 +108,8 @@ static colour trace(scene const *sc, vector from, vector dir, colour premul)
     ADD(w, from);
 
     colour result = premul;
-    texture(sc, intersecting, w, normal, dir, trans_w, trans_dir, &result);
+    texture(sc, intersecting, w, normal, dir,
+	    trans_w, trans_dir, trans_dist, &result);
     return result;
   }
 }
@@ -205,7 +208,8 @@ static vector refract(vector dir, vector normal, double index)
 }
 
 static void sphere_transmit(sphere const *sp, vector w, vector dir,
-			    vector *trans_w, vector *trans_dir)
+			    vector *trans_w, vector *trans_dir,
+			    double *trans_dist)
 {
   double refractive_index = sp->props.refractive_index;
 
@@ -248,6 +252,9 @@ static void sphere_transmit(sphere const *sp, vector w, vector dir,
   if (trans_dir) {
     *trans_dir = dir;
   }
+  if (trans_dist) {
+    *trans_dist = dist;
+  }
 }
 
 static double plane_intersect(checkerboard const *pl, vector from, vector dir)
@@ -269,13 +276,17 @@ static vector plane_normal(checkerboard const *pl, vector w)
 }
 
 static void plane_transmit(checkerboard const *pl, vector w, vector dir,
-			   vector *trans_w, vector *trans_dir)
+			   vector *trans_w, vector *trans_dir,
+			   double *trans_dist)
 {
   if (trans_w) {
     *trans_w = w;
   }
   if (trans_dir) {
     *trans_dir = dir;
+  }
+  if (trans_dist) {
+    *trans_dist = 0.0;
   }
 }
 
@@ -286,7 +297,8 @@ static surface *intersect(scene const *sc,
                           double *dist,
 			  vector *normal,
 			  vector *trans_w,
-			  vector *trans_dir)
+			  vector *trans_dir,
+			  double *trans_dist)
 {
   double nearest_dist = INFINITY;
   sphere *nearest_sphere = NULL;
@@ -319,7 +331,8 @@ static surface *intersect(scene const *sc,
   }
 
   if (nearest_sphere != NULL) {
-    sphere_transmit(nearest_sphere, w, direction, trans_w, trans_dir);
+    sphere_transmit(nearest_sphere, w, direction,
+		    trans_w, trans_dir, trans_dist);
     if (normal != NULL) {
       *normal = sphere_normal(nearest_sphere, w);
     }
@@ -327,7 +340,8 @@ static surface *intersect(scene const *sc,
   }
 
   if (nearest_checkerboard != NULL) {
-    plane_transmit(nearest_checkerboard, w, direction, trans_w, trans_dir);
+    plane_transmit(nearest_checkerboard, w, direction,
+		   trans_w, trans_dir, trans_dist);
     if (normal != NULL) {
       *normal = plane_normal(nearest_checkerboard, w);
     }
@@ -353,6 +367,7 @@ static void texture(scene const *sc,
 		    vector trans_w, /* Place where we leave the surface
 				       after taking into account refraction */
 		    vector trans_dir, /* Direction after transmission */
+		    double trans_dist, /* Distance to other side */
                     colour *col)
 {
   /* Texture by the nearest thing we hit. */
@@ -409,7 +424,7 @@ static void texture(scene const *sc,
     tmp2 = l;
     MULT(tmp2, -1.0);
     double dist;
-    intersect(sc, light_loc, tmp2, &dist, NULL, NULL, NULL);
+    intersect(sc, light_loc, tmp2, &dist, NULL, NULL, NULL, NULL);
     vector to_l = w;
     SUB(to_l, light_loc);
     if (dist*dist + EPSILON < DOT(to_l, to_l)) {
@@ -452,9 +467,9 @@ static void texture(scene const *sc,
   col->b += c.b;
 
   /* Transparency */
-  in.r *= surf->transparency.r;
-  in.g *= surf->transparency.g;
-  in.b *= surf->transparency.b;
+  in.r *= pow(surf->transparency.r, trans_dist);
+  in.g *= pow(surf->transparency.g, trans_dist);
+  in.b *= pow(surf->transparency.b, trans_dist);
 
   if (in.r + in.g + in.b > REFLECTSTOP) {
     colour trans = trace(sc, trans_w, trans_dir, in);
