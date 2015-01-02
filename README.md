@@ -39,6 +39,14 @@ now have:
   super-impressive, but it's kind of nice. I prefer it to the fuzzy
   reflections.
 
+* *trans* Deals with transparency and refractions. I don't
+   particularly like it, since refraction at realistic levels is a
+   very powerful effect which makes it difficult to make it looks
+   nice.
+
+* *dof2* This is really a combination of 'dof' and 'soft', applying
+   soft shadows to the 'dof' image.
+
 (If you want the pretty-much-original version, use the tag
 "original-spheres")
 
