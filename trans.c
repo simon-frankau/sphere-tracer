@@ -8,16 +8,15 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
 #include "tracer.h"
 #include "png_render.h"
 
 #define WIDTH 1024
-#define HEIGHT 512
+#define HEIGHT 384
 
 static light lights[] = {
-  {{10.0, 10.0, 3.0}, {1.0, 1.0, 1.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}},
+  {{20.0, 12.5, 2.5}, {1.0, 1.0, 1.0}, {0.0, 0.0, 5.0}, {0.0, 5.0, 0.0}},
 };
 static int num_lights = 1;
 
@@ -25,9 +24,10 @@ static checkerboard checkerboards;
 
 static void set_surface(surface *s, double r, double g, double b, double shine)
 {
-  s->diffuse.r = r * 0.1;
-  s->diffuse.g = g * 0.1;
-  s->diffuse.b = b * 0.1;
+  /* Limit the diffuse component */
+  s->diffuse.r = r * 0.2;
+  s->diffuse.g = g * 0.2;
+  s->diffuse.b = b * 0.2;
 
   s->specular.r
     = s->specular.g
@@ -39,11 +39,12 @@ static void set_surface(surface *s, double r, double g, double b, double shine)
     = s->reflective.b
     = 0.0; /* shine; */
 
-  s->transparency.r = r;
-  s->transparency.g = g;
-  s->transparency.b = b;
+  /* Make it so that you get the colour if traversing 5 units */
+  s->transparency.r = pow(r, 1.0 / 5.0);
+  s->transparency.g = pow(g, 1.0 / 5.0);
+  s->transparency.b = pow(b, 1.0 / 5.0);
 
-  s->refractive_index = 0.6;
+  s->refractive_index = 1;
 }
 
 static scene *make_scene()
@@ -62,21 +63,23 @@ static scene *make_scene()
   sphere *spheres = (sphere *)malloc(num_spheres * sizeof(sphere));
 
   int i;
-  vector pos = { -2.5, 0.0, 3.0 };
-  double radius = 1.5;
+  vector pos = { -6.0, 0.0, 8.0 };
+  double radius = 1.3;
 
   for (i = 0; i < num_spheres; i++) {
     spheres[i].center = pos;
     spheres[i].radius = radius;
 
     colour c = colour_phase((double)i / num_spheres);
-    set_surface(&spheres[i].props, c.r, c.g, c.b, 0.2);
+    set_surface(&spheres[i].props, c.r, c.g, c.b, 0.1);
+
+    /* Create a range of refractive indices. */
+    spheres[i].props.refractive_index = 1.0 - 0.333 * pow(0.5, 4 - i);
 
     spheres[i].fuzz_size = 0.0;
     spheres[i].fuzz_style = none;
 
-    pos.x += 2.5;
-    pos.z += 2.0;
+    pos.x += 3.0;
   }
 
  scene *result = (scene *)malloc(sizeof(scene));
@@ -87,11 +90,10 @@ static scene *make_scene()
  result->lights = lights;
  result->num_lights = num_lights;
 
- result->num_samples    = 1;
+ result->num_samples    = 1000;
  result->blur_size      = 0.0;
- /* result->antialias_size = 0.5; */
- result->antialias_size = 0.0;
- result->focal_depth    = 5.0;
+ result->antialias_size = 0.5;
+ result->focal_depth    = 0.0;
  result->callback       = NULL;
 
  return result;
