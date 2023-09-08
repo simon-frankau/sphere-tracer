@@ -1,5 +1,13 @@
 # sphere-tracer - A simple ray-tracer
 
+![A chrome sphere on a checkboard, of course, with coloured soft
+shadow.](./examples/soft.png))
+
+	new file:   examples/dof.png
+	new file:   examples/fuzzy.png
+	new file:   examples/moblur.png
+	new file:   examples/soft.png
+
 Way back in, er, apparently 1999, I wrote a very simple ray-tracer. It
 traces spheres. Nothing but spheres. Shiny spheres.
 
@@ -20,24 +28,24 @@ now have:
 
 * *spheres* Generates a whole pile of shiny spheres
 
-* *dof* Generates a row of spheres on a checkerboard plane (how
-  original!), in order to demonstrate depth-of-field, and a little
-  bit of antialiasing.
+* [*dof*](./examples/dof.png) Generates a row of spheres on a
+  checkerboard plane (how original!), in order to demonstrate
+  depth-of-field, and a little bit of antialiasing.
 
-* *soft* Demonstrates soft shadows, including a bit of coloured
-  shadows.
+* [*soft*](./examples/soft.png) Demonstrates soft shadows, including a
+  bit of coloured shadows.
 
-* *fuzzy* Shows off fuzzy reflections. The five images are without
-  fuzz, two different levels of fuzz, and then fuzz with only
-  horizontal and vertical elements. To be honest, I'm a bit
-  underwhelmed by this one.
+* [*fuzzy*](./examples/fuzzy.png) Shows off fuzzy reflections. The
+  five images are without fuzz, two different levels of fuzz, and then
+  fuzz with only horizontal and vertical elements. To be honest, I'm a
+  bit underwhelmed by this one.
 
-* *moblur* Demonstrates motion blur. It's like 'dof', only with the
-  balls moving away from/towards the viewer. I also turned off the
-  depth-of-field effect in order to make sure the blurriness
-  basically comes from the motion. I don't think the effect is
-  super-impressive, but it's kind of nice. I prefer it to the fuzzy
-  reflections.
+* [*moblur*](./examples/moblur.png) Demonstrates motion blur. It's
+  like 'dof', only with the balls moving away from/towards the
+  viewer. I also turned off the depth-of-field effect in order to make
+  sure the blurriness basically comes from the motion. I don't think
+  the effect is super-impressive, but it's kind of nice. I prefer it
+  to the fuzzy reflections.
 
 * *trans* Deals with transparency and refractions. I don't
    particularly like it, since refraction at realistic levels is a
@@ -46,6 +54,8 @@ now have:
 
 * *dof2* This is really a combination of 'dof' and 'soft', applying
    soft shadows to the 'dof' image.
+
+I've provided example output for the cases that I feel worked well.
 
 (If you want the pretty-much-original version, use the tag
 "original-spheres")
