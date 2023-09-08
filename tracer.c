@@ -543,7 +543,7 @@ void render(scene *sc, int width, int height, colour *image)
       image[y*width+x] = white;
 
   printf("Ray Tracing (%d):\n", height);
-  for (y = 0; y < height; y++) {
+  for (y = 200; y < 700; y++) {
     printf("%d\n", y);
     for (x = 0; x < width; x++) {
       colour c = { 0.0, 0.0, 0.0 };
